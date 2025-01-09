@@ -50,11 +50,11 @@ jobs:
           echo "PROXY_PORT=$(echo ${{ steps.import-secrets.outputs.PROXY_PORT }})" >> $GITHUB_ENV
           echo "HTTP_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTP_PROXY_URL }})" >> $GITHUB_ENV
 
-      - name: Set environment variables
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
-
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set environment variables
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
 
       - name: Set up JDK ${{ inputs.JDK_VERSION }}
         uses: actions/setup-java@v4
