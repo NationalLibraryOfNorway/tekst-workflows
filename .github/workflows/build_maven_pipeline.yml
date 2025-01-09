@@ -97,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app.jar
-          path: target/${{ env.ARTIFACT_ID }}.jar
+          path: target/${{ env.ARTIFACT_ID }}
 
       - name: Cache .m2/repository
         uses: actions/cache@v4
