@@ -5,12 +5,16 @@ on:
     inputs:
       ENVIRONMENT:
         required: true
+        type: string
       JDK_VERSION:
         required: true
+        type: string
       MAVEN_VERSION:
         required: true
+        type: string
       USE_MAVEN_PROXY_SETTINGS:
         required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
