@@ -59,10 +59,10 @@ jobs:
       - name: Deploy to ${{ inputs.ENVIRONMENT }} cluster
         run: |
           echo "Deploying to ${{ inputs.ENVIRONMENT }}"
-          kubectl config set-cluster stagecl --server=${{ secrets.K8S_SERVER }}
-          kubectl config set clusters.stagecl.certificate-authority-data ${{ secrets.K8S_CA }}
-          kubectl config set-credentials ${{ secrets.K8S_USER }} --token=${{ secrets.K8S_TOKEN }}
-          kubectl config set-context tekst --cluster=stagecl --user=${{ secrets.K8S_USER }} --namespace=tekst-${{ inputs.ENVIRONMENT }}
+          kubectl config set-cluster stagecl --server=${{ steps.import-secrets.outputs.K8S_SERVER }}
+          kubectl config set clusters.stagecl.certificate-authority-data ${{ steps.import-secrets.outputs.K8S_CA }}
+          kubectl config set-credentials ${{ steps.import-secrets.outputs.K8S_USER }} --token=${{ steps.import-secrets.outputs.K8S_TOKEN }}
+          kubectl config set-context tekst --cluster=stagecl --user=${{ steps.import-secrets.outputs.K8S_USER }} --namespace=tekst-${{ inputs.ENVIRONMENT }}
           kubectl config use-context tekst
           kubectl config view
           kubectl version
