@@ -44,7 +44,7 @@ jobs:
         with:
           version: 'v1.26.5'
 
-      - name: Set APP_NAME
+      - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
 
       - name: Replace values in k8s files
@@ -66,5 +66,5 @@ jobs:
           kubectl config use-context tekst
           kubectl config view
           kubectl version
-          kubectl apply -f k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
-          kubectl rollout restart deploy/${{ env.APP_NAME }}
+          kubectl apply -f k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+          kubectl rollout restart deploy/${{ env.REPOSITORY_NAME }}

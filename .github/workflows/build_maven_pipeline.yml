@@ -44,12 +44,14 @@ jobs:
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
 
-      - name: Set env
+      - name: Set proxy environment variables
         run: |
           echo "HTTPS_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }})" >> $GITHUB_ENV
           echo "PROXY_PORT=$(echo ${{ steps.import-secrets.outputs.PROXY_PORT }})" >> $GITHUB_ENV
           echo "HTTP_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTP_PROXY_URL }})" >> $GITHUB_ENV
-          
+
+      - name: Set environment variables
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -90,8 +92,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app.jar
-          path: target/app.jar
+          name: ${{ env.ARTIFACT_ID }}.jar
+          path: target/${{ env.ARTIFACT_ID }}.jar
 
       - name: Cache .m2/repository
         uses: actions/cache@v4
@@ -133,14 +135,14 @@ jobs:
           username: ${{ steps.import-secrets.outputs.HARBOR_USERNAME }}
           password: ${{ steps.import-secrets.outputs.HARBOR_PASSWORD }}
 
-      - name: Set APP_NAME
+      - name: Set environment variables
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.import-secrets.outputs.HARBOR_URL }}/tekst/${{ env.APP_NAME }}
+          images: ${{ steps.import-secrets.outputs.HARBOR_URL }}/tekst/${{ env.REPOSITORY_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=ref,event=branch
@@ -149,7 +151,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: app.jar
+          name: ${{ env.ARTIFACT_ID }}.jar
 
       - name: Build image
         uses: docker/build-push-action@v5
