@@ -10,11 +10,13 @@ on:
       ENVIRONMENT:
         required: true
         type: string
-    secrets:
       HOST_URL:
         required: true
+        type: string
       HARBOR_URL:
         required: true
+        type: string
+
 
 jobs:
   kubernetes-replace:
@@ -25,6 +27,6 @@ jobs:
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
       - name: SED
         run: |
-          sed -i "s/<harbor_url>/${{ secrets.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
+          sed -i "s/<harbor_url>/${{ inputs.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
           sed -i "s/<version>/${{ inputs.image_version }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
-          sed -i "s/<host_url>/${{ secrets.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
+          sed -i "s/<host_url>/${{ inputs.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml

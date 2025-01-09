@@ -41,10 +41,9 @@ jobs:
 
       - name: Replace values in k8s files
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
-        secrets:
+        with:
           HARBOR_URL: ${{ secrets.HARBOR_URL }}
           HOST_URL: ${{ secrets.K8S_HOST_URL }}
-        with:
           IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
