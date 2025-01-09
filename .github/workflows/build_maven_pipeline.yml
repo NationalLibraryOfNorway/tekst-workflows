@@ -89,10 +89,14 @@ jobs:
           sed -i "s|http_proxy_port|${{ steps.import-secrets.outputs.PROXY_PORT }}|g" .m2/settings.xml
           mvn -e -s .m2/settings.xml ${{ env.MAVEN_INFO }} verify
 
+      - name: Set artifact id
+        run: |
+          echo "ARTIFACT_ID=$(ls target/ | grep -o ".*.jar" | head -1)" >> $GITHUB_ENV
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_ID }}.jar
+          name: app.jar
           path: target/${{ env.ARTIFACT_ID }}.jar
 
       - name: Cache .m2/repository
@@ -151,7 +155,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_ID }}.jar
+          name: app.jar
 
       - name: Build image
         uses: docker/build-push-action@v5
