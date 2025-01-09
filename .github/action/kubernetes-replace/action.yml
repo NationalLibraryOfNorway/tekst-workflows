@@ -6,8 +6,10 @@ on:
     inputs:
       IMAGE_VERSION:
         required: true
+        type: string
       ENVIRONMENT:
         required: true
+        type: string
     secrets:
       HOST_URL:
         required: true
