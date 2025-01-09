@@ -186,7 +186,7 @@ jobs:
           version: 'v1.26.5'
 
       - name: Deploy to stage cluster
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-deploy@main
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes_deploy.yml@main
         with:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
