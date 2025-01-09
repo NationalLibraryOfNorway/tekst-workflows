@@ -160,40 +160,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy-to-k8s:
-    name: Deploy to kubernetes
-    needs: build-and-publish-docker-image
-    runs-on: [self-hosted-linux]
-    environment: ${{ inputs.ENVIRONMENT }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Import stage secrets
-        id: import-secrets
-        uses: hashicorp/vault-action@v3
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/k8s-text-${{ inputs.ENVIRONMENT }} * ;
-            ${{ secrets.VAULT_SECRET_PATH }}/harbor * 
-
-      - name: Setup Kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'v1.26.5'
-
-      - name: Deploy to stage cluster
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes_deploy.yml@main
-        with:
-          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-          IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
-        secrets:
-          HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
-          HOST_URL: ${{ steps.import-secrets.outputs.K8S_HOST_URL }}
-          K8S_SERVER: ${{ steps.import-secrets.outputs.K8S_SERVER }}
-          K8S_CA: ${{ steps.import-secrets.outputs.K8S_CA }}
-          K8S_USER: ${{ steps.import-secrets.outputs.K8S_USER }}
-          K8S_TOKEN: ${{ steps.import-secrets.outputs.K8S_TOKEN }}
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes_deploy.yml@main
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
+    secrets:
+        VAULT_URL: ${{ secrets.VAULT_URL }}
+        VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+        VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+        VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}

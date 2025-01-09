@@ -10,17 +10,13 @@ on:
         required: true
         type: string
     secrets:
-      HARBOR_URL:
+      VAULT_URL:
         required: true
-      K8S_HOST_URL:
+      VAULT_SECRET_PATH:
         required: true
-      K8S_SERVER:
+      VAULT_ROLE_ID:
         required: true
-      K8S_CA:
-        required: true
-      K8S_USER:
-        required: true
-      K8S_TOKEN:
+      VAULT_SECRET_ID:
         required: true
 
 jobs:
@@ -30,6 +26,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Import stage secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/k8s-text-${{ inputs.ENVIRONMENT }} * ;
+            ${{ secrets.VAULT_SECRET_PATH }}/harbor * 
 
       - name: Setup Kubectl
         uses: azure/setup-kubectl@v4
