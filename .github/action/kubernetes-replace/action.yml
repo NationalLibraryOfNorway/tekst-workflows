@@ -1,32 +1,29 @@
 name: SED values for kubernetes
 description: Replace values in kubernetes yaml files
 
-on:
-  workflow_call:
-    inputs:
-      IMAGE_VERSION:
-        required: true
-        type: string
-      ENVIRONMENT:
-        required: true
-        type: string
-      HOST_URL:
-        required: true
-        type: string
-      HARBOR_URL:
-        required: true
-        type: string
+inputs:
+  IMAGE_VERSION:
+    required: true
+    description: placeholder
+  ENVIRONMENT:
+    required: true
+    description: placeholder
+  HOST_URL:
+    required: true
+    description: placeholder
+  HARBOR_URL:
+    required: true
+    description: placeholder
 
 
-jobs:
-  kubernetes-replace:
-    name: SED values for kubernetes
-    runs-on: "composite"
-    steps:
-      - name: Set REPOSITORY_NAME
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
-      - name: SED
-        run: |
-          sed -i "s/<harbor_url>/${{ inputs.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
-          sed -i "s/<version>/${{ inputs.image_version }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
-          sed -i "s/<host_url>/${{ inputs.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+runs:
+  using: "composite"
+  steps:
+    - name: Set REPOSITORY_NAME
+      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
+    - name: SED
+      shell: bash
+      run: |
+        sed -i "s/<harbor_url>/${{ inputs.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+        sed -i "s/<version>/${{ inputs.image_version }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+        sed -i "s/<host_url>/${{ inputs.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
