@@ -36,8 +36,8 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/k8s-text-${{ inputs.ENVIRONMENT }} * ;
-            ${{ secrets.VAULT_SECRET_PATH }}/harbor * 
+            ${{ secrets.VAULT_SECRET_PATH }}/k8s-text-${{ inputs.ENVIRONMENT }} * | K8S_ ;
+            ${{ secrets.VAULT_SECRET_PATH }}/harbor * | HARBOR_
 
       - name: Setup Kubectl
         uses: azure/setup-kubectl@v4
@@ -50,8 +50,8 @@ jobs:
       - name: Replace values in k8s files
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
-          HARBOR_URL: ${{ secrets.HARBOR_URL }}
-          HOST_URL: ${{ secrets.K8S_HOST_URL }}
+          HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_HARBOR_URL }}
+          HOST_URL: ${{ steps.import-secrets.outputs.K8S_K8S_HOST_URL }}
           IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
@@ -59,10 +59,10 @@ jobs:
       - name: Deploy to ${{ inputs.ENVIRONMENT }} cluster
         run: |
           echo "Deploying to ${{ inputs.ENVIRONMENT }}"
-          kubectl config set-cluster stagecl --server=${{ steps.import-secrets.outputs.K8S_SERVER }}
-          kubectl config set clusters.stagecl.certificate-authority-data ${{ steps.import-secrets.outputs.K8S_CA }}
-          kubectl config set-credentials ${{ steps.import-secrets.outputs.K8S_USER }} --token=${{ steps.import-secrets.outputs.K8S_TOKEN }}
-          kubectl config set-context tekst --cluster=stagecl --user=${{ steps.import-secrets.outputs.K8S_USER }} --namespace=tekst-${{ inputs.ENVIRONMENT }}
+          kubectl config set-cluster stagecl --server=${{ steps.import-secrets.outputs.K8S_K8S_SERVER }}
+          kubectl config set clusters.stagecl.certificate-authority-data ${{ steps.import-secrets.outputs.K8S_K8S_CA }}
+          kubectl config set-credentials ${{ steps.import-secrets.outputs.K8S_K8S_USER }} --token=${{ steps.import-secrets.outputs.K8S_K8S_TOKEN }}
+          kubectl config set-context tekst --cluster=stagecl --user=${{ steps.import-secrets.outputs.K8S_K8S_USER }} --namespace=tekst-${{ inputs.ENVIRONMENT }}
           kubectl config use-context tekst
           kubectl config view
           kubectl version
