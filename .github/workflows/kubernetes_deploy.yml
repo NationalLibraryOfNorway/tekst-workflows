@@ -1,0 +1,61 @@
+name: Build mvn Spring app
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+      IMAGE_VERSION:
+        required: true
+    secrets:
+      HARBOR_URL:
+        required: true
+      K8S_HOST_URL:
+        required: true
+      K8S_SERVER:
+        required: true
+      K8S_CA:
+        required: true
+      K8S_USER:
+        required: true
+      K8S_TOKEN:
+        required: true
+
+jobs:
+  deploy-to-kubernetes:
+    name: Deploy to kubernetes
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.26.5'
+
+      - name: Set APP_NAME
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
+
+      - name: Replace values in k8s files
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
+        secrets:
+          HARBOR_URL: ${{ secrets.HARBOR_URL }}
+          HOST_URL: ${{ secrets.K8S_HOST_URL }}
+        with:
+          IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+
+      - name: Deploy to ${{ inputs.ENVIRONMENT }} cluster
+        run: |
+          echo "Deploying to ${{ inputs.ENVIRONMENT }}"
+          kubectl config set-cluster cl --server=${{ secrets.K8S_SERVER }}
+          kubectl config set clusters.cl.certificate-authority-data ${{ secrets.K8S_CA }}
+          kubectl config set-credentials ${{ secrets.K8S_USER }} --token=${{ secrets.K8S_TOKEN }}
+          kubectl config set-context tekst --cluster=cl --user=${{ secrets.K8S_USER }} --namespace=tekst-${{ inputs.ENVIRONMENT }}
+          kubectl config use-context tekst
+          kubectl config view
+          kubectl version
+          kubectl apply -f k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
+          kubectl rollout restart deploy/${{ env.APP_NAME }}

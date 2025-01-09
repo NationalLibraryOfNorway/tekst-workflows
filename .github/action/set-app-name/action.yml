@@ -1,0 +1,10 @@
+name: Set APP_NAME
+description: Sets an env variable APP_NAME to the name of the repository
+
+jobs:
+  set-app-name:
+    name: Set APP_NAME
+    runs-on: "composite"
+    steps:
+      - name: Set APP_NAME
+        run: echo "APP_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV

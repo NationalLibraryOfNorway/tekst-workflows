@@ -1,0 +1,195 @@
+name: Build mvn Spring app
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+      JDK_VERSION:
+        required: true
+      MAVEN_VERSION:
+        required: true
+      USE_MAVEN_PROXY_SETTINGS:
+        required: true
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+env:
+  MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Import http proxy secrets from Vault
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
+
+      - name: Set env
+        run: |
+          echo "HTTPS_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }})" >> $GITHUB_ENV
+          echo "PROXY_PORT=$(echo ${{ steps.import-secrets.outputs.PROXY_PORT }})" >> $GITHUB_ENV
+          echo "HTTP_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTP_PROXY_URL }})" >> $GITHUB_ENV
+          
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ inputs.JDK_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.JDK_VERSION  }}
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install wget -y
+          wget https://downloads.apache.org/maven/maven-3/${{ inputs.MAVEN_VERSION }}/binaries/apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
+          tar xzf apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
+          sudo mv apache-maven-${{ inputs.MAVEN_VERSION }} /opt/
+          sudo ln -s /opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin/mvn /usr/local/bin/mvn
+          echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
+          mvn -v
+
+      - name: Build and Test
+        run: |
+          sed -i "s/https_proxy_host/${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }}/g" .m2/settings.xml
+          sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .m2/settings.xml
+          sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .m2/settings.xml
+          sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .m2/settings.xml
+          mvn -e -s .m2/settings.xml ${{ env.MAVEN_INFO }} verify
+        when: ${{ inputs.USE_MAVEN_PROXY_SETTINGS }} == 'true'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app.jar
+          path: target/app.jar
+
+      - name: Cache .m2/repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+  build-and-publish-docker-image:
+    needs: build-and-test
+    name: Create and push Docker image
+    outputs:
+      image_version: ${{ steps.meta.outputs.version }}
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+
+      - name: Import harbor secrets from Vault
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/harbor * ;
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.import-secrets.outputs.HARBOR_URL }}
+          username: ${{ steps.import-secrets.outputs.HARBOR_USERNAME }}
+          password: ${{ steps.import-secrets.outputs.HARBOR_PASSWORD }}
+
+      - name: Set APP_NAME
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.import-secrets.outputs.HARBOR_URL }}/tekst/${{ env.APP_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=ref,event=pr
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app.jar
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-to-k8s:
+    name: Deploy to kubernetes
+    needs: build-and-publish-docker-image
+    runs-on: [self-hosted-linux]
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Import stage secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/k8s-text-${{ inputs.ENVIRONMENT }} * ;
+            ${{ secrets.VAULT_SECRET_PATH }}/harbor * 
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.26.5'
+
+      - name: Deploy to stage cluster
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-deploy@main
+        with:
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
+        secrets:
+          HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
+          HOST_URL: ${{ steps.import-secrets.outputs.K8S_HOST_URL }}
+          K8S_SERVER: ${{ steps.import-secrets.outputs.K8S_SERVER }}
+          K8S_CA: ${{ steps.import-secrets.outputs.K8S_CA }}
+          K8S_USER: ${{ steps.import-secrets.outputs.K8S_USER }}
+          K8S_TOKEN: ${{ steps.import-secrets.outputs.K8S_TOKEN }}

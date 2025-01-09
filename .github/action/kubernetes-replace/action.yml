@@ -1,0 +1,28 @@
+name: SED values for kubernetes
+description: Replace values in kubernetes yaml files
+
+on:
+  workflow_call:
+    inputs:
+      IMAGE_VERSION:
+        required: true
+      ENVIRONMENT:
+        required: true
+    secrets:
+      HOST_URL:
+        required: true
+      HARBOR_URL:
+        required: true
+
+jobs:
+  kubernetes-replace:
+    name: SED values for kubernetes
+    runs-on: "composite"
+    steps:
+      - name: Set APP_NAME
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
+      - name: SED
+        run: |
+          sed -i "s/<harbor_url>/${{ secrets.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
+          sed -i "s/<version>/${{ inputs.image_version }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
+          sed -i "s/<host_url>/${{ secrets.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.APP_NAME }}.yml
