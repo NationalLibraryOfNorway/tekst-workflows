@@ -79,13 +79,13 @@ jobs:
           mvn -v
 
       - name: Build and Test
+        if: ${{ inputs.USE_MAVEN_PROXY_SETTINGS == 'true' }}
         run: |
           sed -i "s/https_proxy_host/${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }}/g" .m2/settings.xml
           sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .m2/settings.xml
           sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .m2/settings.xml
           sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .m2/settings.xml
           mvn -e -s .m2/settings.xml ${{ env.MAVEN_INFO }} verify
-        when: ${{ inputs.USE_MAVEN_PROXY_SETTINGS }} == 'true'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
