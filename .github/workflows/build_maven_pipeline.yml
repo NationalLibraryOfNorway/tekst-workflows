@@ -161,6 +161,7 @@ jobs:
 
   deploy-to-k8s:
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes_deploy.yml@main
+    needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
