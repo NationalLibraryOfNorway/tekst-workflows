@@ -9,6 +9,15 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
 
 env:
   MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
@@ -45,9 +54,27 @@ jobs:
           echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
           mvn -v
 
+      - name: Import http proxy secrets from Vault
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
+
+      - name: Set proxy environment variables
+        run: |
+          echo "HTTPS_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }})" >> $GITHUB_ENV
+          echo "PROXY_PORT=$(echo ${{ steps.import-secrets.outputs.PROXY_PORT }})" >> $GITHUB_ENV
+          echo "HTTP_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTP_PROXY_URL }})" >> $GITHUB_ENV
+          echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ env.HTTP_PROXY }} -Dhttp.proxyPort=${{ env.PROXY_PORT }} -Dhttps.proxyHost=${{ env.HTTPS_PROXY }} -Dhttps.proxyPort=${{ env.PROXY_PORT }}" >> $GITHUB_ENV
+
       - name: Build and Test
         run: |
-          mvn -e ${{ env.MAVEN_INFO }} verify
+          mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
 
       - name: Cache .m2/repository
         uses: actions/cache@v4
