@@ -12,7 +12,7 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
-      USE_MAVEN_PROXY_SETTINGS:
+      USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
     secrets:
