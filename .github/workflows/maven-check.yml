@@ -69,7 +69,7 @@ jobs:
             ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
 
       - name: Build and Test with proxy maven settings.xml file
-        if: ${{ inputs.USE_MAVEN_PROXY_SETTINGS }}
+        if: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
         run: |
           sed -i "s/https_proxy_host/${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }}/g" .mvn/settings.xml
           sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
