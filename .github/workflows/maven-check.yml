@@ -9,6 +9,9 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
+      USE_MAVEN_SETTINGS_FILE:
+        required: true
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -65,15 +68,19 @@ jobs:
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
 
-      - name: Set proxy environment variables
+      - name: Build and Test with proxy maven settings.xml file
+        if: ${{ inputs.USE_MAVEN_PROXY_SETTINGS }}
         run: |
-          echo "HTTPS_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }})" >> $GITHUB_ENV
-          echo "PROXY_PORT=$(echo ${{ steps.import-secrets.outputs.PROXY_PORT }})" >> $GITHUB_ENV
-          echo "HTTP_PROXY_URL=$(echo ${{ steps.import-secrets.outputs.HTTP_PROXY_URL }})" >> $GITHUB_ENV
-          echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ env.HTTP_PROXY }} -Dhttp.proxyPort=${{ env.PROXY_PORT }} -Dhttps.proxyHost=${{ env.HTTPS_PROXY }} -Dhttps.proxyPort=${{ env.PROXY_PORT }}" >> $GITHUB_ENV
+          sed -i "s/https_proxy_host/${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }}/g" .mvn/settings.xml
+          sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
+          sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
+          sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
+          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
 
-      - name: Build and Test
+      - name: Set java proxy flags, build and test
+        if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == false}}
         run: |
+          echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ steps.import-secrets.outputs.HTTP_PROXY_URL }} -Dhttp.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }} -Dhttps.proxyHost=${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }} -Dhttps.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }}" >> $GITHUB_ENV
           mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
 
       - name: Cache .m2/repository
