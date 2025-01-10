@@ -24,6 +24,6 @@ runs:
     - name: SED
       shell: bash
       run: |
-        sed -i "s/<harbor_url>/${{ inputs.HARBOR_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
-        sed -i "s/<version>/${{ inputs.image_version }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
-        sed -i "s/<host_url>/${{ inputs.HOST_URL }}/g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+        sed -i "s|<harbor_url>|${{ inputs.HARBOR_URL }}|g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+        sed -i "s|<version>|${{ inputs.image_version }}|g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
+        sed -i "s|<host_url>|${{ inputs.HOST_URL }}|g" k8s/${{ inputs.ENVIRONMENT }}/${{ env.REPOSITORY_NAME }}.yml
