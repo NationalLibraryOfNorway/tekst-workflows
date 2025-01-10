@@ -20,7 +20,7 @@ runs:
   using: "composite"
   steps:
     - name: Set REPOSITORY_NAME
-      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-app-name@main
+      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
     - name: SED
       shell: bash
       run: |
