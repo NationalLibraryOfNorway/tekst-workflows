@@ -121,7 +121,7 @@ jobs:
     needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-      IMAGE_VERSION: ${{ jobs.build-and-publish-docker-image.outputs.image_version }}
+      IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
     secrets:
         VAULT_URL: ${{ secrets.VAULT_URL }}
         VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
