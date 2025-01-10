@@ -9,15 +9,6 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
-    secrets:
-      VAULT_URL:
-        required: true
-      VAULT_SECRET_PATH:
-        required: true
-      VAULT_ROLE_ID:
-        required: true
-      VAULT_SECRET_ID:
-        required: true
 
 env:
   MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
