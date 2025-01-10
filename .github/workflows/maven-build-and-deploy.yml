@@ -1,0 +1,69 @@
+name: Build mvn Spring app
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
+      JDK_VERSION:
+        required: true
+        type: string
+      MAVEN_VERSION:
+        required: true
+        type: string
+      USE_MAVEN_PROXY_SETTINGS:
+        required: true
+        type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+env:
+  MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@main
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      JDK_VERSION: ${{ inputs.JDK_VERSION }}
+      MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
+      USE_MAVEN_PROXY_SETTINGS: ${{ inputs.USE_MAVEN_PROXY_SETTINGS }}
+    secrets:
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+      VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+      VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+  build-and-publish-docker-image:
+    needs: build-and-test
+    name: Create and push Docker image
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
+    with:
+      USE_HARBOR: true
+      ARTIFACT_FILE_NAME: app.jar
+    secrets:
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+      VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+      VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+  deploy-to-k8s:
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
+    needs: build-and-publish-docker-image
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
+    secrets:
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+      VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+      VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
