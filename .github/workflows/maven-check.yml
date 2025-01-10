@@ -1,0 +1,66 @@
+name: Maven Check
+
+on:
+  workflow_call:
+    inputs:
+      JDK_VERSION:
+        required: true
+        type: string
+      MAVEN_VERSION:
+        required: true
+        type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+env:
+  MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
+
+jobs:
+  maven-verify:
+    name: Maven Check
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ inputs.JDK_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.JDK_VERSION  }}
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install wget -y
+          wget https://downloads.apache.org/maven/maven-3/${{ inputs.MAVEN_VERSION }}/binaries/apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
+          tar xzf apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
+          sudo mv apache-maven-${{ inputs.MAVEN_VERSION }} /opt/
+          sudo ln -s /opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin/mvn /usr/local/bin/mvn
+          echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
+          mvn -v
+
+      - name: Build and Test
+        run: |
+          mvn -e ${{ env.MAVEN_INFO }} verify
+
+      - name: Cache .m2/repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
