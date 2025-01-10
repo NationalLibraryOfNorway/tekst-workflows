@@ -117,7 +117,7 @@ jobs:
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy-to-k8s:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes_deploy.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
     needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
