@@ -5,7 +5,7 @@ on:
     inputs:
       USE_HARBOR:
         required: true
-        type: boolean
+        type: string
       ARTIFACT_FILE_NAME:
         required: true
         type: string
@@ -51,7 +51,7 @@ jobs:
             ${{ secrets.VAULT_SECRET_PATH }}/harbor * ;
 
       - name: Log in to Harbor # TODO setup dockerhub login
-        if: ${{ inputs.USE_HARBOR }}
+        if: ${{ inputs.USE_HARBOR == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ steps.import-secrets.outputs.HARBOR_URL }}
