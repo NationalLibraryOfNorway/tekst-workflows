@@ -19,7 +19,9 @@ on:
       VAULT_SECRET_ID:
         required: true
     outputs:
-      image_version: ${{ jobs.build-and-publish-docker-image.outputs.image_version }}
+      image_version:
+        description: "The version of the image"
+        value: ${{ jobs.build-and-publish-docker-image.outputs.image_version }}
 
 jobs:
   build-and-publish-docker-image:
