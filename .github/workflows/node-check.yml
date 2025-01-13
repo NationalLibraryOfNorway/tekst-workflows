@@ -62,7 +62,7 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+            kv/team/text/data/hugin-stage * ;
 
       - name: Write Vault secrets to JSON
         if: ${{ inputs.SET_ENV == true }}
