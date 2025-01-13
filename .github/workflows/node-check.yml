@@ -52,15 +52,15 @@ jobs:
         if: ${{ inputs.SET_ENV == true }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
-      - name: Import secrets from Vault
+      - name: Import secrets
         id: import-secrets
         if: ${{ inputs.SET_ENV == true }}
         uses: hashicorp/vault-action@v3
         with:
-          url: ${{ inputs.VAULT_URL }}
+          url: ${{ secrets.VAULT_URL }}
           method: approle
-          roleId: ${{ inputs.VAULT_ROLE_ID }}
-          secretId: ${{ inputs.VAULT_SECRET_ID }}
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
             ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
 
