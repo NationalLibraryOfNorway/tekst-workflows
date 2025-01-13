@@ -63,11 +63,22 @@ jobs:
           secretId: ${{ inputs.VAULT_SECRET_ID }}
           secrets: |
             ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
-            
 
-      - name: Set env if needed
+      - name: Write Vault secrets to JSON
         if: ${{ inputs.SET_ENV == true }}
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env-from-vault@main
+        shell: bash
+        run: |
+          echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+
+      - name: Set environment variables
+        shell: bash
+        run: |
+          touch .env.production
+          jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env.production
+
+#      - name: Set env if needed
+#        if: ${{ inputs.SET_ENV == true }}
+#        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env-from-vault@feat/node-workflows
 
       - name: Run unit tests
         run: npm run test
