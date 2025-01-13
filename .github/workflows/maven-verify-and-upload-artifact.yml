@@ -87,11 +87,14 @@ jobs:
         run: |
           echo "ARTIFACT_FILE_NAME=$(ls target/ | grep -o ".*.jar" | head -1)" >> $GITHUB_ENV
 
+      - name: Compress build output
+        run: tar czvf build_output.tar.gz target/${{ env.ARTIFACT_FILE_NAME }}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app.jar
-          path: target/${{ env.ARTIFACT_FILE_NAME }}
+          name: build-artifact
+          path: build_output.tar.gz
 
       - name: Cache .m2/repository
         uses: actions/cache@v4

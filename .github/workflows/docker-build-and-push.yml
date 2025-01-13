@@ -6,9 +6,6 @@ on:
       USE_HARBOR:
         required: true
         type: string
-      ARTIFACT_FILE_NAME:
-        required: true
-        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -74,7 +71,11 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.ARTIFACT_FILE_NAME }}
+          name: build-artifact
+          path: ./artifacts
+
+      - name: Extract build artifact
+        run: tar xzf ./artifacts/build_output.tar.gz -C .
 
       - name: Build image
         uses: docker/build-push-action@v5

@@ -1,0 +1,54 @@
+name: Build and deploy Node.js application
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        description: "The environment to deploy to (stage, prod)"
+        type: string
+      NODE_VERSION:
+        required: true
+        description: "The version of Node.js to use"
+        type: string
+      SET_ENV:
+        required: true
+        description: "Whether to set the environment variables in a .env.production file"
+        type: boolean
+      BUILD_OUTPUT_PATH:
+        required: true
+        description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
+        type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+jobs:
+  verify-build-and-create-artifact:
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/node-verify-and-upload-artifact.yml@main
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      NODE_VERSION: ${{ inputs.NODE_VERSION }}
+      SET_ENV: ${{ inputs.SET_ENV }}
+      BUILD_OUTPUT_PATH: ${{ inputs.BUILD_OUTPUT_PATH }}
+    secrets:
+        VAULT_URL: ${{ secrets.VAULT_URL }}
+        VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+        VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+        VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+  build-and-publish-docker-image:
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
+    with:
+      USE_HARBOR: true
+    secrets:
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+      VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+      VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}

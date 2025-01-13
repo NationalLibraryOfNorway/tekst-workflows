@@ -1,4 +1,4 @@
-name: Node check
+name: Node Verify and Upload Artifact
 
 on:
   workflow_call:
@@ -15,6 +15,10 @@ on:
         required: true
         description: "Whether to set the environment variables in a .env.production file"
         type: boolean
+      BUILD_OUTPUT_PATH:
+        required: true
+        description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -26,7 +30,8 @@ on:
         required: true
 
 jobs:
-  node-verify:
+  verify-and-upload-build-artifact:
+    name: Verify, build and upload artifact
     runs-on: [self-hosted-linux]
     steps:
       - name: Checkout the repository
@@ -70,3 +75,12 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Compress build output
+        run: tar czvf build_output.tar.gz ${{ inputs.BUILD_OUTPUT_PATH }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-build-artifact
+          path: dist.tar.gz
