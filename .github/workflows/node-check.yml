@@ -62,19 +62,25 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            kv/team/text/data/hugin-stage * ;
-
-      - name: Write Vault secrets to JSON
-        if: ${{ inputs.SET_ENV == true }}
-        shell: bash
-        run: |
-          echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+            ${{ secrets.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
 
       - name: Set environment variables
         shell: bash
         run: |
-          touch .env.production
-          jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env.production
+          # Write secrets to .env file
+          echo "${{ steps.import-secrets.outputs }}" > .env.production
+
+#      - name: Write Vault secrets to JSON
+#        if: ${{ inputs.SET_ENV == true }}
+#        shell: bash
+#        run: |
+#          echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+#
+#      - name: Set environment variables
+#        shell: bash
+#        run: |
+#          touch .env.production
+#          jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env.production
 
 #      - name: Set env if needed
 #        if: ${{ inputs.SET_ENV == true }}
