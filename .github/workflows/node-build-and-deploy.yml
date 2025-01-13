@@ -31,7 +31,7 @@ on:
 
 jobs:
   verify-build-and-create-artifact:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/node-verify-and-upload-artifact.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/node-verify-and-upload-artifact.yml@feat/node-workflows
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       NODE_VERSION: ${{ inputs.NODE_VERSION }}

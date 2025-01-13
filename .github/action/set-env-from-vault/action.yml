@@ -1,0 +1,41 @@
+name: Set environment variables
+description: Set environment variables from Vault to runner environment
+
+inputs:
+  VAULT_URL:
+    required: true
+    description: 'The URL of the Vault server'
+  VAULT_SECRET_PATH:
+    required: true
+    description: 'The path to the secret in Vault'
+  VAULT_ROLE_ID:
+    required: true
+    description: 'The role ID for the AppRole authentication method'
+  VAULT_SECRET_ID:
+    required: true
+    description: 'The secret ID for the AppRole authentication method'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Import secrets from Vault
+      id: import-secrets
+      uses: hashicorp/vault-action@v3
+      with:
+        url: ${{ inputs.VAULT_URL }}
+        method: approle
+        roleId: ${{ inputs.VAULT_ROLE_ID }}
+        secretId: ${{ inputs.VAULT_SECRET_ID }}
+        secrets: |
+          ${{ inputs.VAULT_SECRET_PATH }} *
+
+    - name: Write Vault secrets to JSON
+      shell: bash
+      run: |
+        echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+
+    - name: Set environment variables
+      shell: bash
+      run: |
+        touch .env.production
+        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env.production
