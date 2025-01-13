@@ -11,10 +11,6 @@ on:
         required: true
         description: "The version of Node.js to use"
         type: string
-      BUILD_OUTPUT_PATH:
-        required: true
-        description: "The path to the build output, e.g. .next or dist"
-        type: string
       SET_ENV:
         required: true
         description: "Whether to set the environment variables in a .env.production file"
@@ -52,7 +48,7 @@ jobs:
         if: ${{ inputs.SET_ENV == true }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
-      - name: Import secrets
+      - name: Import environment variable secrets
         id: import-secrets
         if: ${{ inputs.SET_ENV == true }}
         uses: hashicorp/vault-action@v3
@@ -69,22 +65,6 @@ jobs:
         run: |
           # Write secrets to .env file
           echo "${{ steps.import-secrets.outputs }}" > .env.production
-
-#      - name: Write Vault secrets to JSON
-#        if: ${{ inputs.SET_ENV == true }}
-#        shell: bash
-#        run: |
-#          echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
-#
-#      - name: Set environment variables
-#        shell: bash
-#        run: |
-#          touch .env.production
-#          jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env.production
-
-#      - name: Set env if needed
-#        if: ${{ inputs.SET_ENV == true }}
-#        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env-from-vault@feat/node-workflows
 
       - name: Run unit tests
         run: npm run test
