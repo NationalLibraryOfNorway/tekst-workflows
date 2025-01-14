@@ -48,8 +48,16 @@ jobs:
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
+      - name: Add public folder to env if exists
+        run: |
+          if [ -d "public" ]; then
+            echo "PUBLIC_FOLDER=public" >> $GITHUB_ENV
+          else
+            echo "PUBLIC_FOLDER=" >> $GITHUB_ENV
+          fi
+
       - name: Compress build output
-        run: tar czvf build_output.tar.gz ${{ inputs.BUILD_OUTPUT_PATH }}
+        run: tar czvf build_output.tar.gz ${{ inputs.BUILD_OUTPUT_PATH }} ${{ env.PUBLIC_FOLDER }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
