@@ -38,8 +38,25 @@ runs:
         secretId: ${{ inputs.VAULT_SECRET_ID }}
         secrets: |
           ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+          
+
+    - name: Write Vault secrets to JSON
+      if: ${{ inputs.SET_ENV == true }}
+      shell: bash
+      run: |
+        echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
 
     - name: Set environment variables
       shell: bash
       run: |
         echo "${{ steps.import-secrets.outputs }}" >> ${{ inputs.ENV_FILE }}
+
+    - name: Set environment variables
+      shell: bash
+      run: |
+        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> ${{ inputs.ENV_FILE }}
+
+    - name: Cleanup
+      shell: bash
+      run: |
+        rm secrets.json
