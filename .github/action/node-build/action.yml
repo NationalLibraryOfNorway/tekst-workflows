@@ -34,9 +34,11 @@ runs:
         cache: "npm"
 
     - name: Install dependencies
+      shell: bash
       run: npm install
 
     - name: Linting
+      shell: bash
       run: npm run lint
 
     - name: Create .env.production
@@ -50,7 +52,9 @@ runs:
         VAULT_SECRET_ID: ${{ inputs.VAULT_SECRET_ID }}
 
     - name: Run unit tests
+      shell: bash
       run: npm run test
 
     - name: Build application
+      shell: bash
       run: npm run build
