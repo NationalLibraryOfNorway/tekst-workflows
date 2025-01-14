@@ -1,4 +1,3 @@
-# Create composite action for node build
 name: Node build
 description: 'Verify (lint, test) and build a node application'
 inputs:
@@ -42,7 +41,7 @@ runs:
       run: npm run lint
 
     - name: Create .env.production
-      if: ${{ inputs.SET_ENV == true }}
+      if: ${{ inputs.SET_ENV == 'true' }}
       uses: NationalLibraryOfNorway/tekst-workflows/.github/action/write-env-file-from-vault@feat/node-workflows
       with:
         ENVIRONMENT: ${{ inputs.ENVIRONMENT }}

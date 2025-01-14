@@ -14,7 +14,7 @@ on:
       SET_ENV:
         required: true
         description: "Whether to set the environment variables in a .env.production file"
-        type: boolean
+        type: string
     secrets:
       VAULT_URL:
         required: true
