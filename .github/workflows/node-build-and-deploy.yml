@@ -53,3 +53,15 @@ jobs:
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
       VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+  deploy-to-k8s:
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@feat/node-workflows
+    needs: build-and-publish-docker-image
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
+    secrets:
+        VAULT_URL: ${{ secrets.VAULT_URL }}
+        VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+        VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+        VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
