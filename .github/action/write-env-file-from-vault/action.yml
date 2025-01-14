@@ -41,10 +41,8 @@ runs:
           
 
     - name: Write Vault secrets to JSON
-      if: ${{ inputs.SET_ENV == true }}
       shell: bash
       run: |
-        touch secrets.json
         echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
 
     - name: Set environment variables
