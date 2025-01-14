@@ -5,10 +5,6 @@ inputs:
   ENVIRONMENT:
     required: true
     description: 'Env name (stage/prod)'
-  ENV_FILE:
-    required: false
-    default: '.env'
-    description: 'Name of .env file'
   VAULT_URL:
     required: true
     description: 'The URL of the Vault server'
@@ -44,6 +40,8 @@ runs:
       shell: bash
       run: |
         echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+        cat secrets.json
+        
 
 #    - name: Set environment variables
 #      shell: bash
@@ -53,7 +51,7 @@ runs:
     - name: Set environment variables
       shell: bash
       run: |
-        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> ${{ inputs.ENV_FILE }}
+        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env
 
     - name: debug -- print .env
       shell: bash
