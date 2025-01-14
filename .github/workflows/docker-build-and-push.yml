@@ -72,10 +72,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifact
-          path: ./artifacts
 
       - name: Extract build artifact
-        run: tar xzf ./artifacts/build_output.tar.gz -C .
+        run: tar xzf build_output.tar.gz -C .
 
       - name: Build image
         uses: docker/build-push-action@v5
