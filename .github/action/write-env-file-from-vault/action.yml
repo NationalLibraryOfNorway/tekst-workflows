@@ -51,12 +51,13 @@ runs:
     - name: Set environment variables
       shell: bash
       run: |
+        echo "" >> .env
         jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env
 
     - name: debug -- print .env
       shell: bash
       run: |
-          cat ${{ inputs.ENV_FILE }}
+        cat .env
 
     - name: Cleanup
       shell: bash
