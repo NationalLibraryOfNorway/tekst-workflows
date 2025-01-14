@@ -44,6 +44,7 @@ jobs:
         VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
   build-and-publish-docker-image:
+    needs: verify-build-and-create-artifact
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
     with:
       USE_HARBOR: true

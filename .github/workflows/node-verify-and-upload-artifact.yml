@@ -37,44 +37,16 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Node build
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@feat/node-workflows
         with:
-          node-version: ${{ inputs.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Linting
-        run: npm run lint
-
-      - name: Set REPOSITORY_NAME
-        if: ${{ inputs.SET_ENV == true }}
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
-
-      - name: Import environment variable secrets
-        id: import-secrets
-        if: ${{ inputs.SET_ENV == true }}
-        uses: hashicorp/vault-action@v3
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
-
-      - name: Set environment variables
-        shell: bash
-        run: |
-          echo "${{ steps.import-secrets.outputs }}" > .env.production
-
-      - name: Run unit tests
-        run: npm run test
-
-      - name: Build application
-        run: npm run build
+          NODE_VERSION: ${{ inputs.NODE_VERSION }}
+          SET_ENV: ${{ inputs.SET_ENV }}
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          VAULT_URL: ${{ secrets.VAULT_URL }}
+          VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
       - name: Compress build output
         run: tar czvf build_output.tar.gz ${{ inputs.BUILD_OUTPUT_PATH }}

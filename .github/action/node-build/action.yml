@@ -1,0 +1,70 @@
+# Create composite action for node build
+name: Node build
+description: 'Verify (lint, test) and build a node application'
+inputs:
+  NODE_VERSION:
+    description: 'The version of Node.js to use'
+    required: true
+    type: string
+  SET_ENV:
+    description: 'Whether to set the environment variables in a .env.production file'
+    required: true
+    type: boolean
+  ENVIRONMENT:
+    description: 'The environment to deploy to (stage, prod)'
+    required: true
+    type: string
+  VAULT_URL:
+    required: true
+    description: 'The URL of the Vault server'
+  VAULT_SECRET_PATH:
+    required: true
+    description: 'The path to the secret in Vault'
+  VAULT_ROLE_ID:
+    required: true
+    description: 'The role ID for the AppRole authentication method'
+  VAULT_SECRET_ID:
+    required: true
+    description: 'The secret ID for the AppRole authentication method'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+        cache: "npm"
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Linting
+      run: npm run lint
+
+    - name: Set REPOSITORY_NAME
+      if: ${{ inputs.SET_ENV == true }}
+      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
+
+    - name: Import environment variable secrets
+      id: import-secrets
+      if: ${{ inputs.SET_ENV == true }}
+      uses: hashicorp/vault-action@v3
+      with:
+        url: ${{ secrets.VAULT_URL }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        secrets: |
+          ${{ secrets.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+
+    - name: Set environment variables
+      shell: bash
+      run: |
+        echo "${{ steps.import-secrets.outputs }}" > .env.production
+
+    - name: Run unit tests
+      run: npm run test
+
+    - name: Build application
+      run: npm run build
