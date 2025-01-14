@@ -40,7 +40,9 @@ runs:
       shell: bash
       run: |
         echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+        echo "--------- TESTING ---------"
         cat secrets.json
+        echo "--------- TESTING ---------"
         
 
 #    - name: Set environment variables
@@ -57,7 +59,9 @@ runs:
     - name: debug -- print .env
       shell: bash
       run: |
+        echo "--------- TESTING ---------"
         cat .env
+        echo "--------- TESTING ---------"
 
     - name: Cleanup
       shell: bash
