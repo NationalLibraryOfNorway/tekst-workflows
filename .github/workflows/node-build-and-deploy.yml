@@ -45,7 +45,7 @@ jobs:
 
   build-and-publish-docker-image:
     needs: verify-build-and-create-artifact
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@feat/node-workflows
     with:
       USE_HARBOR: true
     secrets:
