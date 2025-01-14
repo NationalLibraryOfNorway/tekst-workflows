@@ -32,12 +32,12 @@ runs:
       id: import-secrets
       uses: hashicorp/vault-action@v3
       with:
-        url: ${{ secrets.VAULT_URL }}
+        url: ${{ inputs.VAULT_URL }}
         method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        roleId: ${{ inputs.VAULT_ROLE_ID }}
+        secretId: ${{ inputs.VAULT_SECRET_ID }}
         secrets: |
-          ${{ secrets.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+          ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
 
     - name: Set environment variables
       shell: bash
