@@ -1,5 +1,5 @@
-name: Write secrets to .env.production
-description: Set environment variables from Vault to .env.production. Useful for e.g. Next.js applications.
+name: Write secrets to .env
+description: Set environment variables from Vault to .env. Useful for e.g. Next.js applications.
 
 inputs:
   ENVIRONMENT:
@@ -7,7 +7,7 @@ inputs:
     description: 'Env name (stage/prod)'
   ENV_FILE:
     required: false
-    default: '.env.production'
+    default: '.env'
     description: 'Name of .env file'
   VAULT_URL:
     required: true
@@ -42,4 +42,4 @@ runs:
     - name: Set environment variables
       shell: bash
       run: |
-        echo "${{ steps.import-secrets.outputs }}" > ${{ inputs.ENV_FILE }}
+        echo "${{ steps.import-secrets.outputs }}" >> ${{ inputs.ENV_FILE }}
