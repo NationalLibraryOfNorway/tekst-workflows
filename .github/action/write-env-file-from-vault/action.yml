@@ -55,6 +55,11 @@ runs:
       run: |
         jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> ${{ inputs.ENV_FILE }}
 
+    - name: debug -- print .env
+      shell: bash
+      run: |
+          cat ${{ inputs.ENV_FILE }}
+
     - name: Cleanup
       shell: bash
       run: |
