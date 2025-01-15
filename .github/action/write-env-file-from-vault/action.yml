@@ -36,21 +36,22 @@ runs:
           ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
     
 
-    - name: Set environment
-      shell: bash
-      run: |
-        echo "${{ steps.import-secrets.outputs }}" > .env.production
-        echo "--------- TESTING ---------"
-        cat .env.production
-        echo "--------- TESTING ---------"
-
-#    - name: Write Vault secrets to JSON
+#    - name: Set environment
 #      shell: bash
 #      run: |
-#        echo "${{ toJSON(steps.import-secrets.outputs) }}" >> secrets.json
+#        echo "${{ steps.import-secrets.outputs }}" > .env.production
 #        echo "--------- TESTING ---------"
-#        cat secrets.json
+#        cat .env.production
 #        echo "--------- TESTING ---------"
+
+    - name: Step following 'Import Secrets'
+      shell: bash
+      run: |
+        touch secrets.json
+        echo '${{ toJson(steps.import-secrets.outputs) }}' >> secrets.json
+          echo "--------- TESTING ---------"
+          cat secrets.json
+          echo "--------- TESTING ---------"
 
 
 #    - name: Set environment variables
