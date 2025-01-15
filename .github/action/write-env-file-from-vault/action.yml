@@ -34,45 +34,12 @@ runs:
         secretId: ${{ inputs.VAULT_SECRET_ID }}
         secrets: |
           ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
-    
 
-#    - name: Set environment
-#      shell: bash
-#      run: |
-#        echo "${{ steps.import-secrets.outputs }}" > .env.production
-#        echo "--------- TESTING ---------"
-#        cat .env.production
-#        echo "--------- TESTING ---------"
-
-    - name: Step following 'Import Secrets'
+    - name: Write secrets to .env
       shell: bash
       run: |
         touch secrets.json
         echo '${{ toJson(steps.import-secrets.outputs) }}' >> secrets.json
-          echo "--------- TESTING ---------"
-          cat secrets.json
-          echo "--------- TESTING ---------"
-
-
-#    - name: Set environment variables
-#      shell: bash
-#      run: |
-#        echo "${{ steps.import-secrets.outputs }}" >> ${{ inputs.ENV_FILE }}
-
-    - name: Set environment variables
-      shell: bash
-      run: |
         echo "" >> .env
         jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env
-#
-    - name: debug -- print .env
-      shell: bash
-      run: |
-        echo "--------- TESTING ---------"
-        cat .env
-        echo "--------- TESTING ---------"
-
-#    - name: Cleanup
-#      shell: bash
-#      run: |
-#        rm secrets.json
+        rm secrets.json
