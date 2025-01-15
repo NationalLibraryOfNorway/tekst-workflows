@@ -1,0 +1,44 @@
+name: Node check
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        description: "The environment to deploy to (stage, prod)"
+        type: string
+      NODE_VERSION:
+        required: true
+        description: "The version of Node.js to use"
+        type: string
+      SET_ENV:
+        required: true
+        description: "Whether to set the environment variables in a .env file"
+        type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+jobs:
+  node-verify:
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Node build
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@main
+        with:
+          NODE_VERSION: ${{ inputs.NODE_VERSION }}
+          SET_ENV: ${{ inputs.SET_ENV }}
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          VAULT_URL: ${{ secrets.VAULT_URL }}
+          VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
