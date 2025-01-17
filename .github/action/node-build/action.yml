@@ -62,15 +62,9 @@ runs:
       shell: bash
       continue-on-error: true
       run: |
+        sudo apt-get update
+        sudo apt-get install libgconf2-4 libnss3-1d libxss1
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i google-chrome-stable_current_amd64.deb
-        sudo apt-get install -f
-        sudo dpkg -i --force-all google-chrome-stable_current_amd64.deb
-
-    - name: Install dependencies part 2
-      shell: bash
-      run: |
-        sudo apt-get install -f
         sudo dpkg -i google-chrome-stable_current_amd64.deb
 
 
