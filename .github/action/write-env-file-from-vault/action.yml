@@ -34,6 +34,7 @@ runs:
         secretId: ${{ inputs.VAULT_SECRET_ID }}
         secrets: |
           ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+          ${{ inputs.VAULT_SECRET_PATH }}/keycloak-nbauth-tekst * | NEXT_PUBLIC_ ;
 
     - name: Write secrets to .env
       shell: bash
