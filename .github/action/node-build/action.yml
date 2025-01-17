@@ -29,6 +29,18 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Install dependencies
+      shell: bash
+      continue-on-error: true
+      env:
+        HELPER_SCRIPTS: helpers
+      run: |
+        mkdir helpers
+        curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/helpers | jq -r '.[].download_url' | while read url; do
+          wget -P helpers "$url"
+        done
+        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | sudo bash
+        
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -58,14 +70,7 @@ runs:
       shell: bash
       run: npm run test
 
-    - name: Install dependencies
-      shell: bash
-      continue-on-error: true
-      run: |
-        curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/helpers | jq -r '.[].download_url' | while read url; do
-          wget "$url"
-        done
-        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | sudo bash
+
 
 
     - name: Run unit tests headless
