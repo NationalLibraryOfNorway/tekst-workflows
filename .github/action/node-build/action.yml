@@ -60,11 +60,18 @@ runs:
 
     - name: Install dependencies
       shell: bash
+      continue-on-error: true
       run: |
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i --force-all google-chrome-stable_current_amd64.deb
+        sudo dpkg -i google-chrome-stable_current_amd64.deb
         sudo apt-get install -f
         sudo dpkg -i --force-all google-chrome-stable_current_amd64.deb
+
+    - name: Install dependencies part 2
+      shell: bash
+      run: |
+        sudo apt-get install -f
+        sudo dpkg -i google-chrome-stable_current_amd64.deb
 
 
     - name: Run unit tests headless
