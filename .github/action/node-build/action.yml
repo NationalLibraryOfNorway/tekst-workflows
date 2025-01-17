@@ -49,6 +49,7 @@ runs:
         # Download the install Google Chrome script
         wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | \
           sed "s|\$HELPER_SCRIPTS|${HELPER_SCRIPTS}|g" | \
+          sed "s|apt-get install|apt-get install -y|g" | \
           sudo bash
 
     - name: Set up Node.js
