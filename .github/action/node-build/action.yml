@@ -44,7 +44,8 @@ runs:
       if: ${{ inputs.ENV_VARS_BASE64 != '' }}
       shell: bash
       run: |
-        echo ${{ inputs.ENV_VARS_BASE64 }} | base64 -d > .env
+        echo "" >> .env
+        echo ${{ inputs.ENV_VARS_BASE64 }} | base64 -d >> .env
 
     - name: Run unit tests
       shell: bash
