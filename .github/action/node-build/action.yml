@@ -62,7 +62,7 @@ runs:
       shell: bash
       continue-on-error: true
       run: |
-        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | bash
+        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | sudo bash
 
 
     - name: Run unit tests headless
