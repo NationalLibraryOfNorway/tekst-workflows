@@ -36,6 +36,8 @@ runs:
         HELPER_SCRIPTS: ./helpers
       run: |
         sudo add-apt-repository universe
+        sudo apt-get update
+        sudo apt-get upgrade -y
         mkdir helpers
         curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/helpers | jq -r '.[].download_url' | while read url; do
           wget -P helpers "$url"
