@@ -56,7 +56,7 @@ jobs:
           password: ${{ steps.import-secrets.outputs.HARBOR_PASSWORD }}
 
       - name: Set REPOSITORY_NAME
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@ci/chrome-test
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

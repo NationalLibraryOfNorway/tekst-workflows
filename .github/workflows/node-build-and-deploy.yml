@@ -35,7 +35,7 @@ on:
 
 jobs:
   verify-build-and-create-artifact:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/node-verify-and-upload-artifact.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/node-verify-and-upload-artifact.yml@ci/chrome-test
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
@@ -50,7 +50,7 @@ jobs:
 
   build-and-publish-docker-image:
     needs: verify-build-and-create-artifact
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@ci/chrome-test
     with:
       USE_HARBOR: true
     secrets:
@@ -60,7 +60,7 @@ jobs:
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy-to-k8s:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@ci/chrome-test
     needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}

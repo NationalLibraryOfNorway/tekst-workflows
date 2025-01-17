@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Node build
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@main
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@ci/chrome-test
         with:
           NODE_VERSION: ${{ inputs.NODE_VERSION }}
           SET_ENV: ${{ inputs.SET_ENV }}

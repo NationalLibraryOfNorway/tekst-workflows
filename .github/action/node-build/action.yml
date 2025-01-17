@@ -45,7 +45,7 @@ runs:
 
     - name: Create .env
       if: ${{ inputs.SET_ENV == 'true' }}
-      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/write-env-file-from-vault@main
+      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/write-env-file-from-vault@ci/chrome-test
       with:
         ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
         VAULT_URL: ${{ inputs.VAULT_URL }}
