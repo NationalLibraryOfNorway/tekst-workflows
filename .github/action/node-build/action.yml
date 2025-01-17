@@ -40,7 +40,10 @@ runs:
           wget -P helpers "$url"
         done
         echo $HELPER_SCRIPTS
-        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | sudo bash
+        # Download the install Google Chrome script
+        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | \
+          sed "s|\$HELPER_SCRIPTS|${HELPER_SCRIPTS}|g" | \
+          sudo bash
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
