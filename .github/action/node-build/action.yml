@@ -58,15 +58,14 @@ runs:
       shell: bash
       run: npm run test
 
-    - name: Install chrome and run unit tests headless
+    - name: Setup chrome
+      uses: browser-actions/setup-chrome@v1
+      run: chrome --version
+
+    - name: Run unit tests headless
       shell: bash
       if: ${{ inputs.HEADLESS == 'true' }}
-      run: |
-        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' |  tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update -y
-        sudo apt-get install google-chrome-stable -y
-        npm run test:headless
+      run: npm run test:headless
 
     - name: Build application
       shell: bash
