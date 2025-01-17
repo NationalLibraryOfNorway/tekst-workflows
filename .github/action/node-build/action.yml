@@ -62,6 +62,9 @@ runs:
       shell: bash
       continue-on-error: true
       run: |
+        curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/helpers | jq -r '.[].download_url' | while read url; do
+          wget "$url"
+        done
         wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | sudo bash
 
 
