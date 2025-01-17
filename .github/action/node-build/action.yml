@@ -60,7 +60,6 @@ runs:
 
     - name: Setup chrome
       uses: browser-actions/setup-chrome@v1
-      run: chrome --version
 
     - name: Run unit tests headless
       shell: bash
