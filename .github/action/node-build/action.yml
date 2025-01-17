@@ -10,6 +10,9 @@ inputs:
   ENVIRONMENT:
     description: 'The environment to deploy to (stage, prod)'
     required: true
+  HEADLESS:
+    description: 'Whether to run tests headless'
+    required: true
   VAULT_URL:
     required: true
     description: 'The URL of the Vault server'
@@ -51,8 +54,14 @@ runs:
         VAULT_SECRET_ID: ${{ inputs.VAULT_SECRET_ID }}
 
     - name: Run unit tests
+      if: ${{ inputs.HEADLESS == 'false' }}
       shell: bash
       run: npm run test
+
+    - name: Run unit tests
+      if: ${{ inputs.HEADLESS == 'true' }}
+      shell: bash
+      run: npm run test:headless
 
     - name: Build application
       shell: bash

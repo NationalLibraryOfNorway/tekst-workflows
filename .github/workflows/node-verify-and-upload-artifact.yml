@@ -19,6 +19,10 @@ on:
         required: true
         description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
         type: string
+      HEADLESS:
+        required: true
+        description: "Whether to run tests headless"
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -47,6 +51,7 @@ jobs:
           VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+          HEADLESS: ${{ inputs.HEADLESS }}
 
       - name: Add public folder to env if exists
         run: |
