@@ -11,10 +11,10 @@ on:
         required: true
         description: "The version of Node.js to use"
         type: string
-      SET_ENV:
-        required: true
-        description: "Whether to set the environment variables in a .env file"
-        type: boolean
+      ENV_VARS_BASE64:
+        required: false
+        description: "Base64 encoded environment variables ready to be written to a .env file"
+        type: string
       BUILD_OUTPUT_PATH:
         required: true
         description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
@@ -35,7 +35,7 @@ jobs:
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
-      SET_ENV: ${{ inputs.SET_ENV }}
+      ENV_VARS_BASE64: ${{ inputs.ENV_VARS_BASE64 }}
       BUILD_OUTPUT_PATH: ${{ inputs.BUILD_OUTPUT_PATH }}
     secrets:
         VAULT_URL: ${{ secrets.VAULT_URL }}

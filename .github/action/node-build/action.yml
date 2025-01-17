@@ -4,9 +4,9 @@ inputs:
   NODE_VERSION:
     description: 'The version of Node.js to use'
     required: true
-  SET_ENV:
-    description: 'Whether to set the environment variables in a .env file'
-    required: true
+  ENV_VARS_BASE64:
+    description: 'Base64 encoded environment variables ready to be written to a .env file'
+    required: false
   ENVIRONMENT:
     description: 'The environment to deploy to (stage, prod)'
     required: true
@@ -41,14 +41,9 @@ runs:
       run: npm run lint
 
     - name: Create .env
-      if: ${{ inputs.SET_ENV == 'true' }}
-      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/write-env-file-from-vault@main
-      with:
-        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-        VAULT_URL: ${{ inputs.VAULT_URL }}
-        VAULT_SECRET_PATH: ${{ inputs.VAULT_SECRET_PATH }}
-        VAULT_ROLE_ID: ${{ inputs.VAULT_ROLE_ID }}
-        VAULT_SECRET_ID: ${{ inputs.VAULT_SECRET_ID }}
+      if: ${{ inputs.ENV_VARS_BASE64 }}
+      shell: bash
+      run: echo ${{ inputs.ENV_VARS_BASE64 }} | base64 -d > .env
 
     - name: Run unit tests
       shell: bash
