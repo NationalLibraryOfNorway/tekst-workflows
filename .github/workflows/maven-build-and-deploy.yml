@@ -31,7 +31,7 @@ env:
 jobs:
   build-and-test:
     name: Build and Test
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@feat/add-build-args-to-docker-build
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@main
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
@@ -46,7 +46,7 @@ jobs:
   build-and-publish-docker-image:
     needs: build-and-test
     name: Create and push Docker image
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@feat/add-build-args-to-docker-build
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       USE_HARBOR: true
@@ -57,7 +57,7 @@ jobs:
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy-to-k8s:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@feat/add-build-args-to-docker-build
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
     needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}

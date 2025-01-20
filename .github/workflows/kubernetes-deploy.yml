@@ -46,10 +46,10 @@ jobs:
           version: 'v1.26.5'
 
       - name: Set REPOSITORY_NAME
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@feat/add-build-args-to-docker-build
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
       - name: Replace values in k8s files
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@feat/add-build-args-to-docker-build
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_HARBOR_URL }}
           HOST_URL: ${{ steps.import-secrets.outputs.K8S_K8S_HOST_URL }}
