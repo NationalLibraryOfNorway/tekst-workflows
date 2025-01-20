@@ -91,4 +91,4 @@ runs:
 
     - name: Build application
       shell: bash
-      run: npm run build
+      run: npm run build:${{ inputs.ENVIRONMENT }}
