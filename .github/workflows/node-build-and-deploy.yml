@@ -19,9 +19,9 @@ on:
         required: true
         description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
         type: string
-      HEADLESS:
+      USE_CHROME:
         required: true
-        description: "Whether to run tests headless"
+        description: "Whether to run tests with chrome installed"
         type: boolean
     secrets:
       VAULT_URL:
@@ -41,7 +41,7 @@ jobs:
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
       SET_ENV: ${{ inputs.SET_ENV }}
       BUILD_OUTPUT_PATH: ${{ inputs.BUILD_OUTPUT_PATH }}
-      HEADLESS: ${{ inputs.HEADLESS }}
+      USE_CHROME: ${{ inputs.USE_CHROME }}
     secrets:
         VAULT_URL: ${{ secrets.VAULT_URL }}
         VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
