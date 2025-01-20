@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Node build
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@main
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/node-build@feat/add-build-args-to-docker-build
         with:
           NODE_VERSION: ${{ inputs.NODE_VERSION }}
           SET_ENV: ${{ inputs.SET_ENV }}

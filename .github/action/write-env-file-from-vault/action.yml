@@ -22,7 +22,7 @@ runs:
   using: "composite"
   steps:
     - name: Set REPOSITORY_NAME
-      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
+      uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@feat/add-build-args-to-docker-build
 
     - name: Import environment variable secrets
       id: import-secrets
