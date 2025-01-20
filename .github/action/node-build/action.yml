@@ -30,7 +30,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install Google Chrome
-      if: ${{ inputs.USE_CHROME == 'true' }}
+      if: ${{ inputs.USE_CHROME == 'false' }}
       shell: bash
       continue-on-error: true
       env:
@@ -60,6 +60,14 @@ runs:
           sed "s|\$HELPER_SCRIPTS|${HELPER_SCRIPTS}|g" | \
           sed "s|apt-get install|apt-get install -y|g" | \
           sudo bash
+
+    - name: install chrome dependencies
+      shell: bash
+      if: ${{ inputs.USE_CHROME == 'true' }}
+      run: |
+        sudo apt-get update
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        apt-get install -f ./google-chrome-stable_current_amd64.deb
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
