@@ -15,9 +15,6 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
-      SET_APP_ENV:
-        required: true
-        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -40,7 +37,6 @@ jobs:
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
-      SET_APP_ENV: ${{ inputs.SET_APP_ENV }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}

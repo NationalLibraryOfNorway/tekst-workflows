@@ -1,4 +1,4 @@
-name: Set Maven environment variables.
+name: Set environment variables.
 
 inputs:
   VAULT_URL:

@@ -15,9 +15,6 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
-      SET_APP_ENV:
-        required: true
-        type: string
     secrets:
       VAULT_URL:
         required: true
