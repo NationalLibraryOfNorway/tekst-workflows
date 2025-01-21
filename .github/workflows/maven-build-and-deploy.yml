@@ -15,6 +15,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      SET_APP_ENV:
+        required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -31,12 +34,13 @@ env:
 jobs:
   build-and-test:
     name: Build and Test
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@feat/set-maven-environment-variables
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
+      SET_APP_ENV: ${{ inputs.SET_APP_ENV }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
@@ -46,7 +50,7 @@ jobs:
   build-and-publish-docker-image:
     needs: build-and-test
     name: Create and push Docker image
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@feat/set-maven-environment-variables
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       USE_HARBOR: true
@@ -57,7 +61,7 @@ jobs:
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
   deploy-to-k8s:
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@feat/set-maven-environment-variables
     needs: build-and-publish-docker-image
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
