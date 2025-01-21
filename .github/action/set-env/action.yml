@@ -20,9 +20,10 @@ runs:
     - name: Set REPOSITORY_NAME
       uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@feat/set-maven-environment-variables
 
-    - name: Import environment variable secrets
+    - name: Import secrets
       id: import-secrets
       uses: hashicorp/vault-action@v3
+      continue-on-error: true
       with:
         url: ${{ inputs.VAULT_URL }}
         method: approle
