@@ -1,10 +1,6 @@
-name: Write secrets to .env
-description: Set environment variables from Vault to .env. Useful for e.g. Next.js applications.
+name: Write secrets to environment variables
 
 inputs:
-  ENVIRONMENT:
-    required: true
-    description: 'Env name (stage/prod)'
   VAULT_URL:
     required: true
     description: 'The URL of the Vault server'
@@ -33,7 +29,7 @@ runs:
         roleId: ${{ inputs.VAULT_ROLE_ID }}
         secretId: ${{ inputs.VAULT_SECRET_ID }}
         secrets: |
-          ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
+          ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-stage * ;
           ${{ inputs.VAULT_SECRET_PATH }}/keycloak-nbauth-tekst *;
 
     - name: Write secrets to environment variables

@@ -74,11 +74,10 @@ jobs:
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
 
-      - name: Set environment variables
-        if: ${{ inputs.SET_APP_ENV == 'true' }}
+      - name: Set environment variables for testing if stage environment
+        if: ${{ inputs.ENVIRONMENT == 'stage' }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env@feat/set-maven-environment-variables
         with:
-          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           VAULT_URL: ${{ secrets.VAULT_URL }}
           VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
