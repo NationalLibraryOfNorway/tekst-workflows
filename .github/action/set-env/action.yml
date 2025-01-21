@@ -1,4 +1,4 @@
-name: Write secrets to environment variables
+name: Set Maven environment variables.
 
 inputs:
   VAULT_URL:
