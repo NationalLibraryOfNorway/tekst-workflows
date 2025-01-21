@@ -15,6 +15,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      SET_APP_ENV:
+        required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -67,6 +70,16 @@ jobs:
           sudo ln -s /opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin/mvn /usr/local/bin/mvn
           echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
           mvn -v
+
+      - name: Set environment variables
+        if: ${{ inputs.SET_APP_ENV == 'true' }}
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env@feat/set-maven-environment-variables
+        with:
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          VAULT_URL: ${{ secrets.VAULT_URL }}
+          VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}

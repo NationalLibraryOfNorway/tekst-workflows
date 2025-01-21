@@ -3,6 +3,9 @@ name: Maven Check
 on:
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
       JDK_VERSION:
         required: true
         type: string
@@ -10,6 +13,9 @@ on:
         required: true
         type: string
       USE_MAVEN_SETTINGS_FILE:
+        required: true
+        type: string
+      SET_APP_ENV:
         required: true
         type: string
     secrets:
@@ -67,6 +73,16 @@ jobs:
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
+
+      - name: Set environment variables
+        if: ${{ inputs.SET_APP_ENV == 'true' }}
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-env@feat/set-maven-environment-variables
+        with:
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          VAULT_URL: ${{ secrets.VAULT_URL }}
+          VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
