@@ -34,6 +34,7 @@ runs:
           ${{ inputs.VAULT_SECRET_PATH }}/keycloak-nbauth-tekst *;
 
     - name: Write secrets to environment variables
+      if: success()
       shell: bash
       run: |
         touch secrets.json
