@@ -3,6 +3,9 @@ name: Build and publish Docker image
 on:
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
       USE_HARBOR:
         required: true
         type: string
@@ -83,3 +86,5 @@ jobs:
           context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ENVIRONMENT=${{ inputs.ENVIRONMENT }}

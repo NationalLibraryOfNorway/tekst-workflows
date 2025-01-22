@@ -48,6 +48,7 @@ jobs:
     name: Create and push Docker image
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@main
     with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       USE_HARBOR: true
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
