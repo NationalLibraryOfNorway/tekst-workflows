@@ -40,7 +40,6 @@ jobs:
     name: Build and Test
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@ci/chrome-test
     with:
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
