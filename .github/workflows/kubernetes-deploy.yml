@@ -52,10 +52,10 @@ jobs:
           version: 'v1.26.5'
 
       - name: Set REPOSITORY_NAME
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@ci/chrome-test
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
       - name: Replace values in k8s files
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@ci/chrome-test
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
           HOST_URL: ${{ steps.import-secrets.outputs.K8S_HOST_URL }}

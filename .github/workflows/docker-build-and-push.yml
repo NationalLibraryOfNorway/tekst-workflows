@@ -49,7 +49,7 @@ jobs:
             ${{ secrets.VAULT_SECRET_PATH }}/dockerhub *
 
       - name: Set REPOSITORY_NAME
-        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@ci/chrome-test
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
       - name: Set up docker config (url, username and password) based on USE_HARBOR
         run: |
