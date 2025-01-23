@@ -3,6 +3,10 @@ name: Build mvn Spring app
 on:
   workflow_call:
     inputs:
+      CLUSTER_NAME:
+        required: true
+        type: string
+        description: "The name of the Kubernetes cluster to deploy to (harvestk8s, k8s)"
       ENVIRONMENT:
         required: true
         type: string
@@ -15,6 +19,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      USE_HARBOR:
+        required: true
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -48,7 +55,7 @@ jobs:
     name: Create and push Docker image
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/docker-build-and-push.yml@ci/chrome-test
     with:
-      USE_HARBOR: true
+      USE_HARBOR: ${{ inputs.USE_HARBOR }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
@@ -59,6 +66,7 @@ jobs:
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@ci/chrome-test
     needs: build-and-publish-docker-image
     with:
+      CLUSTER_NAME: ${{ inputs.CLUSTER_NAME }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
     secrets:

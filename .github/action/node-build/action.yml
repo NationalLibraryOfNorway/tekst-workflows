@@ -30,38 +30,6 @@ runs:
   using: 'composite'
   steps:
     - name: Install Google Chrome
-      if: ${{ inputs.USE_CHROME == 'false' }}
-      shell: bash
-      continue-on-error: true
-      env:
-        HELPER_SCRIPTS: ./helpers
-        TEST_SCRIPTS: ./tests
-      run: |
-        # Add universe repository to install Google Chrome's dependencies
-        sudo add-apt-repository universe
-        sudo apt-get update
-        sudo apt-get upgrade -y
-        # Install Githubs action runner official helper scripts
-        mkdir helpers
-        curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/helpers | jq -r '.[].download_url' | while read url; do
-          wget -P helpers "$url"
-        done
-        # Install Githubs action runner official test scripts
-        mkdir tests
-        curl -s https://api.github.com/repos/actions/runner-images/contents/images/ubuntu/scripts/tests | jq -r '.[].download_url' | while read url; do
-          wget -P tests "$url"
-        done
-        # Replace $HELPER_SCRIPTS with the actual path in the helper scripts
-        for file in helpers/*; do
-          sed -i "s|\$HELPER_SCRIPTS|${HELPER_SCRIPTS}|g" "$file"
-        done
-        # Download the install Github runners Google Chrome install script and run
-        wget -qO- https://raw.githubusercontent.com/actions/runner-images/refs/heads/main/images/ubuntu/scripts/build/install-google-chrome.sh | \
-          sed "s|\$HELPER_SCRIPTS|${HELPER_SCRIPTS}|g" | \
-          sed "s|apt-get install|apt-get install -y|g" | \
-          sudo bash
-
-    - name: install chrome dependencies
       shell: bash
       if: ${{ inputs.USE_CHROME == 'true' }}
       run: |

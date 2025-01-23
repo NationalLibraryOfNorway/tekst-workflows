@@ -3,6 +3,9 @@ name: Build and deploy Node.js application
 on:
   workflow_call:
     inputs:
+      CLUSTER_NAME:
+        required: true
+        description: "The name of the cluster to deploy to, (harvestk8s, k8s)"
       ENVIRONMENT:
         required: true
         description: "The environment to deploy to (stage, prod)"
@@ -63,6 +66,7 @@ jobs:
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@ci/chrome-test
     needs: build-and-publish-docker-image
     with:
+      CLUSTER_NAME: ${{ inputs.CLUSTER_NAME }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
     secrets:
