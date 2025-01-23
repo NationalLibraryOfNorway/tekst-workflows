@@ -66,9 +66,17 @@ jobs:
           fi
 
       - name: Log in to docker registry
+        if: ${{ inputs.USE_HARBOR }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.DOCKER_URL }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Log in to docker registry
+        if: ${{ inputs.USE_HARBOR == 'false' }}
+        uses: docker/login-action@v3
+        with:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
