@@ -45,8 +45,8 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/harbor * |
-            ${{ secrets.VAULT_SECRET_PATH }}/dockerhub * ;
+            ${{ secrets.VAULT_SECRET_PATH }}/harbor * ;
+            ${{ secrets.VAULT_SECRET_PATH }}/dockerhub *
 
       - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@ci/chrome-test
