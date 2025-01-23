@@ -62,7 +62,7 @@ jobs:
             echo "DOCKER_URL=" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ steps.import-secrets.outputs.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ steps.import-secrets.outputs.DOCKERHUB_PASSWORD }}" >> $GITHUB_ENV
-            echo "IMAGE_NAME=nationallibraryofnorway/tekst/${{ env.REPOSITORY_NAME }}" >> $GITHUB_ENV
+            echo "IMAGE_NAME=nationallibraryofnorway/${{ env.REPOSITORY_NAME }}" >> $GITHUB_ENV
           fi
 
       - name: Log in to docker registry
