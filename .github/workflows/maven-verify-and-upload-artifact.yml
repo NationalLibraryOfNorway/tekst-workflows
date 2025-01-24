@@ -3,9 +3,6 @@ name: Maven Verify and Upload Artifact
 on:
   workflow_call:
     inputs:
-      ENVIRONMENT:
-        required: true
-        type: string
       JDK_VERSION:
         required: true
         type: string

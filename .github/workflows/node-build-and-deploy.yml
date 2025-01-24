@@ -3,6 +3,9 @@ name: Build and deploy Node.js application
 on:
   workflow_call:
     inputs:
+      CLUSTER_NAME:
+        required: true
+        description: "The name of the cluster to deploy to, (harvestk8s, k8s)"
       ENVIRONMENT:
         required: true
         description: "The environment to deploy to (stage, prod)"
@@ -19,6 +22,10 @@ on:
         required: true
         description: "The path to the build output relative to the repository root, e.g. 'dist' or '.next'"
         type: string
+      USE_CHROME:
+        required: true
+        description: "Whether to run tests with chrome installed"
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -37,6 +44,7 @@ jobs:
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
       SET_ENV: ${{ inputs.SET_ENV }}
       BUILD_OUTPUT_PATH: ${{ inputs.BUILD_OUTPUT_PATH }}
+      USE_CHROME: ${{ inputs.USE_CHROME }}
     secrets:
         VAULT_URL: ${{ secrets.VAULT_URL }}
         VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
@@ -59,6 +67,7 @@ jobs:
     uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/kubernetes-deploy.yml@main
     needs: build-and-publish-docker-image
     with:
+      CLUSTER_NAME: ${{ inputs.CLUSTER_NAME }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
     secrets:

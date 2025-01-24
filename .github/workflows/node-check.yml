@@ -15,6 +15,10 @@ on:
         required: true
         description: "Whether to set the environment variables in a .env file"
         type: string
+      USE_CHROME:
+        required: true
+        description: "Whether to run tests with chrome installed"
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -42,3 +46,4 @@ jobs:
           VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+          USE_CHROME: ${{ inputs.USE_CHROME }}

@@ -49,23 +49,45 @@ jobs:
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/harbor * ;
-
-      - name: Log in to Harbor # TODO setup dockerhub login
-        if: ${{ inputs.USE_HARBOR == 'true' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.import-secrets.outputs.HARBOR_URL }}
-          username: ${{ steps.import-secrets.outputs.HARBOR_USERNAME }}
-          password: ${{ steps.import-secrets.outputs.HARBOR_PASSWORD }}
+            ${{ secrets.VAULT_SECRET_PATH }}/dockerhub *
 
       - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
+
+      - name: Set up docker config (url, username and password) based on USE_HARBOR
+        run: |
+          if [ "${{ inputs.USE_HARBOR }}" == "true" ]; then
+            echo "DOCKER_URL=${{ steps.import-secrets.outputs.HARBOR_URL }}" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ steps.import-secrets.outputs.HARBOR_USERNAME }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ steps.import-secrets.outputs.HARBOR_PASSWORD }}" >> $GITHUB_ENV
+            echo "IMAGE_NAME=${{ steps.import-secrets.outputs.HARBOR_URL }}/tekst/${{ env.REPOSITORY_NAME }}" >> $GITHUB_ENV
+          else
+            echo "DOCKER_URL=" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ steps.import-secrets.outputs.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ steps.import-secrets.outputs.DOCKERHUB_PASSWORD }}" >> $GITHUB_ENV
+            echo "IMAGE_NAME=nationallibraryofnorway/${{ env.REPOSITORY_NAME }}" >> $GITHUB_ENV
+          fi
+
+      - name: Log in to docker registry
+        if: ${{ inputs.USE_HARBOR }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_URL }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Log in to docker registry
+        if: ${{ inputs.USE_HARBOR == 'false' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.import-secrets.outputs.HARBOR_URL }}/tekst/${{ env.REPOSITORY_NAME }} # TODO set image based on docker host
+          images: ${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=ref,event=branch
