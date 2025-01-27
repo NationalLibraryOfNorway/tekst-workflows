@@ -6,6 +6,7 @@ on:
       CLUSTER_NAME:
         required: true
         description: "The name of the cluster to deploy to, (harvestk8s, k8s)"
+        type: string
       ENVIRONMENT:
         required: true
         description: "The environment to deploy to (stage, prod)"
