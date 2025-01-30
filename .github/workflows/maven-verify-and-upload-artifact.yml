@@ -9,7 +9,7 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
-      MAVEN_VERIFY_ARGUMENTS:
+      USE_DOCKER_FOR_TEST:
         required: true
         type: string
       USE_MAVEN_SETTINGS_FILE:
@@ -29,7 +29,18 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: [self-hosted-linux]
+    services:
+      docker:
+        if: ${{ inputs.USE_DOCKER_FOR_TEST == 'true' }}
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 2375:2375
     steps:
+      - name: Pre-script docker.host
+        run: |
+          - echo "docker.host=tcp://localhost:2376"  > $HOME/.testcontainers.properties      
+
       - name: Import http proxy secrets from Vault
         id: import-secrets
         uses: hashicorp/vault-action@v3

@@ -16,8 +16,8 @@ on:
       MAVEN_VERSION:
         required: true
         type: string
-      MAVEN_VERIFY_ARGUMENTS:
-        required: false
+      USE_DOCKER_FOR_TEST:
+        required: true
         type: string
       USE_MAVEN_SETTINGS_FILE:
         required: true
@@ -45,7 +45,7 @@ jobs:
     with:
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
-      MAVEN_VERIFY_ARGUMENTS: ${{ inputs.MAVEN_VERIFY_ARGUMENTS || '' }}
+      USE_DOCKER_FOR_TEST: ${{ inputs.USE_DOCKER_FOR_TEST }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
