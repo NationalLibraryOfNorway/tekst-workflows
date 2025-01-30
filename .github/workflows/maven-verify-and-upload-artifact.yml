@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: Pre-script docker.host
         run: |
-          - echo "docker.host=tcp://localhost:2376"  > $HOME/.testcontainers.properties      
+          echo "docker.host=tcp://localhost:2376"  > $HOME/.testcontainers.properties      
 
       - name: Import http proxy secrets from Vault
         id: import-secrets
