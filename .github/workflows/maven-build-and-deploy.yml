@@ -41,7 +41,7 @@ env:
 jobs:
   build-and-test:
     name: Build and Test
-    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@main
+    uses: NationalLibraryOfNorway/tekst-workflows/.github/workflows/maven-verify-and-upload-artifact.yml@feat/use-batch-mode-maven
     with:
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
