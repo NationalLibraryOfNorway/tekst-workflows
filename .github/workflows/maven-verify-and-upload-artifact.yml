@@ -31,7 +31,6 @@ jobs:
     runs-on: [self-hosted-linux]
     services:
       docker:
-        if: ${{ inputs.USE_DOCKER_FOR_TEST == 'true' }}
         image: docker:dind
         options: --privileged
         ports:
