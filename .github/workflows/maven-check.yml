@@ -66,7 +66,7 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/ci-proxy *
+            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *
 
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
