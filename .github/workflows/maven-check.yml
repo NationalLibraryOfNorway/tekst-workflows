@@ -12,6 +12,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      ENVIRONMENT_VARIABLES:
+        required: false
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -56,6 +59,14 @@ jobs:
           sudo ln -s /opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin/mvn /usr/local/bin/mvn
           echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
           mvn -v
+
+      - name: Set environment variables if present
+        if: ${{ inputs.ENVIRONMENT_VARIABLES }}
+        run: |
+          IFS=',' read -ra ENV_VARS <<< "${{ inputs.ENVIRONMENT_VARIABLES }}"
+          for VAR in "${ENV_VARS[@]}"; do
+            echo "$VAR" >> $GITHUB_ENV
+          done
 
       - name: Import http proxy secrets from Vault
         id: import-secrets
