@@ -12,6 +12,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      SPRING_PROFILES_ACTIVE:
+        required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -72,7 +75,11 @@ jobs:
           sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
-          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          if [ "${{ inputs.SPRING_PROFILES_ACTIVE }}" != "" ]; then
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} -Dspring.profiles.active=${{ inputs.SPRING_PROFILES_ACTIVE }} verify
+          else
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          fi
 
       - name: Set java proxy flags, build and test
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'false'}}
