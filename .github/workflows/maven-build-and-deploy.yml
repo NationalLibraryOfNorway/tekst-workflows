@@ -22,6 +22,9 @@ on:
       USE_HARBOR:
         required: true
         type: boolean
+      SPRING_PROFILES_ACTIVE:
+        required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -43,6 +46,7 @@ jobs:
       JDK_VERSION: ${{ inputs.JDK_VERSION }}
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
+      SPRING_PROFILES_ACTIVE: ${{ inputs.SPRING_PROFILES_ACTIVE }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
