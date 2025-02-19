@@ -1,4 +1,4 @@
-name: Build mvn Spring app
+name: Deploy to kubernetes
 
 on:
   workflow_call:
