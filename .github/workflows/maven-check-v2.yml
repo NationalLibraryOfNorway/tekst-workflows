@@ -42,12 +42,6 @@ jobs:
           sudo apt-get install -y wget openjdk-17-jre maven inetutils-ping
           mvn -v
 
-      - name: Ping pong
-        run: |
-          ping localhost -c 4
-          wget http://localhost
-          wget https://localhost
-
       - name: Import http proxy secrets from Vault
         id: import-secrets
         uses: hashicorp/vault-action@v3
