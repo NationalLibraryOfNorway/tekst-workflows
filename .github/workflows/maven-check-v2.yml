@@ -36,6 +36,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check proxy
+        run: |
+          echo $http_proxy
+          echo $https_proxy
+          echo $HTTPS_PROXY
+          echo $HTTP_PROXY
+
       - name: Install Maven
         run: |
           sudo apt-get update -y
