@@ -1,0 +1,76 @@
+name: Maven Check
+
+on:
+  workflow_call:
+    inputs:
+      JDK_VERSION:
+        required: true
+        type: string
+      JDK_DISTRIBUTION:
+        required: false
+        type: string
+      MAVEN_VERSION:
+        required: true
+        type: string
+      USE_MAVEN_SETTINGS_FILE:
+        required: true
+        type: string
+    secrets:
+      VAULT_URL:
+        required: true
+      VAULT_SECRET_PATH:
+        required: true
+      VAULT_ROLE_ID:
+        required: true
+      VAULT_SECRET_ID:
+        required: true
+
+env:
+  MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
+
+jobs:
+  maven-verify:
+    name: Maven Check
+    runs-on: [self-hosted-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install default-jre maven
+          mvn -v
+
+      - name: Import http proxy secrets from Vault
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *
+
+      - name: Build and Test with proxy maven settings.xml file
+        if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
+        run: |
+          sed -i "s/https_proxy_host/${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }}/g" .mvn/settings.xml
+          sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
+          sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
+          sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
+          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+
+      - name: Set java proxy flags, build and test
+        if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'false'}}
+        run: |
+          echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ steps.import-secrets.outputs.HTTP_PROXY_URL }} -Dhttp.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }} -Dhttps.proxyHost=${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }} -Dhttps.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }}" >> $GITHUB_ENV
+          mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
+
+      - name: Cache .m2/repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
