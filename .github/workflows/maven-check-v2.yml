@@ -31,7 +31,7 @@ env:
 jobs:
   maven-verify:
     name: Maven Check
-    runs-on: dependabot
+    runs-on: self-hosted-linux
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
