@@ -6,6 +6,9 @@ on:
       JDK_VERSION:
         required: true
         type: string
+      JDK_DISTRIBUTION:
+        required: false
+        type: string
       MAVEN_VERSION:
         required: true
         type: string
@@ -37,7 +40,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ inputs.JDK_VERSION  }}
-          distribution: 'temurin'
+          distribution: ${{ inputs.JDK_DISTRIBUTION || 'temurin' }}
 
       - name: Cache Maven packages
         uses: actions/cache@v4
