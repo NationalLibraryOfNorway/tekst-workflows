@@ -39,7 +39,7 @@ jobs:
       - name: Install Maven
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y default-jre maven
+          sudo apt-get install -y openjdk-17-jre maven
           mvn -v
 
       - name: Import http proxy secrets from Vault
