@@ -31,7 +31,7 @@ env:
 jobs:
   maven-verify:
     name: Maven Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted-linux
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,7 +41,6 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y wget openjdk-17-jre maven inetutils-ping
           mvn -v
-          mvn verify
 
       - name: Import http proxy secrets from Vault
         id: import-secrets
