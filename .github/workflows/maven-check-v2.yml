@@ -61,7 +61,8 @@ jobs:
           sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
-          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ steps.import-secrets.outputs.HTTP_PROXY_URL }} -Dhttp.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }} -Dhttps.proxyHost=${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }} -Dhttps.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }}" >> $GITHUB_ENV
+          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
 
       - name: Set java proxy flags, build and test
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'false'}}
