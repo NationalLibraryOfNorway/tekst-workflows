@@ -39,14 +39,14 @@ jobs:
       - name: Install Maven
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jre maven inetutils-ping
+          sudo apt-get install -y wget openjdk-17-jre maven inetutils-ping
           mvn -v
 
       - name: Ping pong
         run: |
           ping localhost -c 4
-          ping http://localhost -c 4
-          ping https://localhost -c 4
+          wget http://localhost
+          wget https://localhost
 
       - name: Import http proxy secrets from Vault
         id: import-secrets
