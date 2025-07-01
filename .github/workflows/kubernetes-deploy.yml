@@ -11,6 +11,10 @@ on:
         required: true
         type: string
         description: "The name of the cluster to deploy to, (harvestk8s, k8s)"
+      USE_PRODUCTION_URL:
+        required: false
+        description: "To use `produksjon.nb.no` or not (only available to `prod` environment)"
+        type: boolean
       IMAGE_VERSION:
         required: true
         type: string
@@ -54,11 +58,21 @@ jobs:
       - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
-      - name: Replace values in k8s files
+      - name: Replace values in k8s files (k8s ingress)
+        if: ${{ steps.import-secrets.outputs.USE_PRODUCTION_URL  != 'true' }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
           HOST_URL: ${{ steps.import-secrets.outputs.K8S_HOST_URL }}
+          IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+      - name: Replace values in k8s files (production ingress)
+        if: ${{ steps.import-secrets.outputs.USE_PRODUCTION_URL  == 'true' &&  steps.import-secrets.outputs.ENVIRONMENT == 'prod'}}
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
+        with:
+          HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
+          HOST_URL: ${{ steps.import-secrets.outputs.K8S_PRODUCTION_HOST_URL }}
           IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
