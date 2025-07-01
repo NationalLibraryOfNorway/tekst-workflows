@@ -11,6 +11,10 @@ on:
         required: true
         description: "The environment to deploy to (stage, prod)"
         type: string
+      USE_PRODUCTION_URL:
+        required: false
+        description: "To use `produksjon.nb.no` or not (only available to `prod` environment)"
+        type: boolean
       NODE_VERSION:
         required: true
         description: "The version of Node.js to use"
@@ -70,6 +74,7 @@ jobs:
     with:
       CLUSTER_NAME: ${{ inputs.CLUSTER_NAME }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      USE_PRODUCTION_URL: ${{ inputs.USE_PRODUCTION_URL }}
       IMAGE_VERSION: ${{ needs.build-and-publish-docker-image.outputs.image_version }}
     secrets:
         VAULT_URL: ${{ secrets.VAULT_URL }}
