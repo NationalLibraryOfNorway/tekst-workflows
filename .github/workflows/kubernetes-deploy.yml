@@ -60,12 +60,15 @@ jobs:
 
       - name: Sanity check
         run: |
-          echo ${{ inputs.USE_PRODUCTION_URL }}
+          echo "use_prod_url: ${{ inputs.USE_PRODUCTION_URL }}"
+          echo "env: ${{ inputs.ENVIRONMENT }}"
           echo "check k8s.ingress: ${{ inputs.USE_PRODUCTION_URL  == 'false' || inputs.USE_PRODUCTION_URL  == null }}"
           echo "check production.ingress: ${{ inputs.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT == 'prod'}}"
+          echo "check bool k8s.ingress: ${{ inputs.USE_PRODUCTION_URL  == false || inputs.USE_PRODUCTION_URL  == null }}"
+          echo "check bool production.ingress: ${{ inputs.USE_PRODUCTION_URL  == true &&  inputs.ENVIRONMENT == 'prod'}}"
 
       - name: Replace values in k8s files (k8s ingress)
-        if: ${{ inputs.USE_PRODUCTION_URL  == 'false' || inputs.USE_PRODUCTION_URL  == null }}
+        if: ${{ inputs.USE_PRODUCTION_URL  == false || inputs.USE_PRODUCTION_URL  == null }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
@@ -74,7 +77,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
       - name: Replace values in k8s files (production ingress)
-        if: ${{ inputs.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT == 'prod'}}
+        if: ${{ inputs.USE_PRODUCTION_URL  == true &&  inputs.ENVIRONMENT == 'prod'}}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
