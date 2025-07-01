@@ -58,8 +58,14 @@ jobs:
       - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
+      - name: Sanity check
+        run: |
+          echo ${{ inputs.USE_PRODUCTION_URL }}
+          echo "check k8s.ingress: ${{ inputs.USE_PRODUCTION_URL  == 'false' || inputs.USE_PRODUCTION_URL  == null }}"
+          echo "check production.ingress: ${{ inputs.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT == 'prod'}}"
+
       - name: Replace values in k8s files (k8s ingress)
-        if: ${{ inputs.ENVIRONMENT.USE_PRODUCTION_URL  == 'false' || inputs.ENVIRONMENT.USE_PRODUCTION_URL  == null }}
+        if: ${{ inputs.USE_PRODUCTION_URL  == 'false' || inputs.USE_PRODUCTION_URL  == null }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
@@ -68,7 +74,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
       - name: Replace values in k8s files (production ingress)
-        if: ${{ inputs.ENVIRONMENT.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT.ENVIRONMENT == 'prod'}}
+        if: ${{ inputs.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT == 'prod'}}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
