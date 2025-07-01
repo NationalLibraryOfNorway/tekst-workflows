@@ -59,7 +59,7 @@ jobs:
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
       - name: Replace values in k8s files (k8s ingress)
-        if: ${{ steps.import-secrets.outputs.USE_PRODUCTION_URL  == 'false' || steps.import-secrets.outputs.USE_PRODUCTION_URL  == null }}
+        if: ${{ inputs.ENVIRONMENT.USE_PRODUCTION_URL  == 'false' || inputs.ENVIRONMENT.USE_PRODUCTION_URL  == null }}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
@@ -68,7 +68,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
       - name: Replace values in k8s files (production ingress)
-        if: ${{ steps.import-secrets.outputs.USE_PRODUCTION_URL  == 'true' &&  steps.import-secrets.outputs.ENVIRONMENT == 'prod'}}
+        if: ${{ inputs.ENVIRONMENT.USE_PRODUCTION_URL  == 'true' &&  inputs.ENVIRONMENT.ENVIRONMENT == 'prod'}}
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/kubernetes-replace@main
         with:
           HARBOR_URL: ${{ steps.import-secrets.outputs.HARBOR_URL }}
