@@ -100,6 +100,9 @@ jobs:
       - name: Extract build artifact
         run: tar xzf build_output.tar.gz -C .
 
+      - name: Sanity LS
+        run: ls -la
+
       - name: Build image
         uses: docker/build-push-action@v5
         with:
