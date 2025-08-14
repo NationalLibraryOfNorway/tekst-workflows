@@ -37,6 +37,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set effective cluster name
+        if: ${{ inputs.ENVIRONMENT == 'stage' }}
+        run: |
+          if [[ "${{ inputs.CLUSTER_NAME }}" == "hstk8s" || "${{ inputs.CLUSTER_NAME }}" == "harvestk8s" ]]; then
+            echo "EFFECTIVE_CLUSTER_NAME=hstk8s" >> $GITHUB_ENV
+          else
+            echo "EFFECTIVE_CLUSTER_NAME=${{ inputs.CLUSTER_NAME }}" >> $GITHUB_ENV
+          fi
+
       - name: Import stage secrets
         id: import-secrets
         uses: hashicorp/vault-action@v3
@@ -46,7 +55,7 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/${{ inputs.CLUSTER_NAME }}-text-${{ inputs.ENVIRONMENT }} * ;
+            ${{ secrets.VAULT_SECRET_PATH }}/${{ env.EFFECTIVE_CLUSTER_NAME }}-text-${{ inputs.ENVIRONMENT }} * ;
             ${{ secrets.VAULT_SECRET_PATH }}/harbor * ;
             ${{ secrets.VAULT_SECRET_PATH }}/dockerhub *
 
