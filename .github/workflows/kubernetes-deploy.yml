@@ -46,6 +46,11 @@ jobs:
             echo "EFFECTIVE_CLUSTER_NAME=${{ inputs.CLUSTER_NAME }}" >> $GITHUB_ENV
           fi
 
+      - name: Set effective cluster name
+        if: ${{ inputs.ENVIRONMENT == 'prod' }}
+        run: |
+          echo "EFFECTIVE_CLUSTER_NAME=${{ inputs.CLUSTER_NAME }}" >> $GITHUB_ENV
+
       - name: Import stage secrets
         id: import-secrets
         uses: hashicorp/vault-action@v3
