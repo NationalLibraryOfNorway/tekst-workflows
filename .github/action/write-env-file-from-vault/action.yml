@@ -17,14 +17,29 @@ inputs:
   VAULT_SECRET_ID:
     required: true
     description: 'The secret ID for the AppRole authentication method'
+  FRAMEWORK:
+    required: false
+    description: 'The framework to use (e.g. nextjs, react, nodejs, hilla). Defaults to nextjs.'
+    default: 'nextjs'
 
 runs:
   using: "composite"
+
   steps:
+    - name: Check for supported framework
+      id: check-framework
+      shell: bash
+      run: |
+        if [[ "${{ inputs.FRAMEWORK }}" != "nextjs" && "${{ inputs.FRAMEWORK }}" != "hilla" ]]; then
+          echo "Unsupported framework: ${{ inputs.FRAMEWORK }}. Supported frameworks are: nextjs, hilla."
+          exit 1
+        fi
+
     - name: Set REPOSITORY_NAME
       uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
 
     - name: Import environment variable secrets
+      if: ${{ inputs.FRAMEWORK == 'nextjs' }}
       id: import-secrets
       uses: hashicorp/vault-action@v3
       with:
@@ -36,11 +51,28 @@ runs:
           ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * ;
           ${{ inputs.VAULT_SECRET_PATH }}/keycloak-nbauth-tekst * | NEXT_PUBLIC_ ;
 
+    - name: Import environment variable secrets
+      if: ${{ inputs.FRAMEWORK == 'hilla' }}
+      id: import-secrets
+      uses: hashicorp/vault-action@v3
+      with:
+        url: ${{ inputs.VAULT_URL }}
+        method: approle
+        roleId: ${{ inputs.VAULT_ROLE_ID }}
+        secretId: ${{ inputs.VAULT_SECRET_ID }}
+        secrets: |
+          ${{ inputs.VAULT_SECRET_PATH }}/${{ env.REPOSITORY_NAME }}-${{ inputs.ENVIRONMENT }} * | VITE_ ;
+
     - name: Write secrets to .env
       shell: bash
       run: |
+        if [ ${{ inputs.FRAMEWORK }} == 'nextjs' ]; then
+          ENV_FILE=.env
+        elif [ ${{ inputs.FRAMEWORK }} == 'hilla' ]; then
+          ENV_FILE='src/main/frontend/.env'
+        fi
         touch secrets.json
         echo '${{ toJson(steps.import-secrets.outputs) }}' >> secrets.json
-        echo "" >> .env
-        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> .env
+        echo "" >> $ENV_FILE
+        jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> $ENV_FILE
         rm secrets.json
