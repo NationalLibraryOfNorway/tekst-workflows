@@ -13,7 +13,8 @@ on:
         required: true
         type: string
       ENVIRONMENT:
-        required: true
+        description: Benyttes kun til å bygge .env-filer til eventuell frontend
+        required: false
         type: string
     secrets:
       VAULT_URL:
