@@ -13,9 +13,8 @@ on:
         required: true
         type: string
       ENVIRONMENT:
-        required: false
+        required: true
         type: string
-        default: nextjs
     secrets:
       VAULT_URL:
         required: true
