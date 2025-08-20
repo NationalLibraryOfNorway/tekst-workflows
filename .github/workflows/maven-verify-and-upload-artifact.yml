@@ -12,6 +12,9 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      ENVIRONMENT:
+        required: true
+        type: string
     secrets:
       VAULT_URL:
         required: true
@@ -65,6 +68,28 @@ jobs:
           echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
           mvn -v
 
+      - name: Check source code for existence of Hilla frontend
+        shell: bash
+        run: |
+          if [ -d "src/main/frontend" ]; then
+            echo "Hilla frontend found."
+            echo "FRONTEND_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "No Hilla frontend found."
+            echo "FRONTEND_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build frontend env file
+        if: ${{ env.FRONTEND_EXISTS == 'true' }}
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/write-env-file-from-vault@main
+        with:
+          FRAMEWORK: hilla
+          ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          VAULT_URL: ${{ secrets.VAULT_URL }}
+          VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
         run: |
@@ -72,13 +97,32 @@ jobs:
           sed -i "s/https_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
-          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
+            echo "Building with Hilla frontend using production profile"
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify -Pproduction
+          else
+            echo "No Hilla frontend found, skipping frontend build"
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          fi
 
       - name: Set java proxy flags, build and test
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'false'}}
         run: |
           echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ steps.import-secrets.outputs.HTTP_PROXY_URL }} -Dhttp.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }} -Dhttps.proxyHost=${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }} -Dhttps.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }}" >> $GITHUB_ENV
-          mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
+          if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
+            echo "Building with Hilla frontend using production profile"
+            mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify -Pproduction
+          else
+            echo "No Hilla frontend found, skipping frontend build"
+            mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
+          fi
+      - name: Run Node tests
+        if: ${{ env.FRONTEND_EXISTS == 'true' }}
+        run: |
+          echo "Running Node tests"
+          cd target
+          npm ci
+          npm run test
 
       - name: Set artifact file name
         run: |
