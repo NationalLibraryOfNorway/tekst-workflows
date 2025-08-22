@@ -40,7 +40,7 @@ runs:
 
     - name: Import environment variable secrets
       if: ${{ inputs.FRAMEWORK == 'nextjs' }}
-      id: import-secrets
+      id: import-secrets-nextjs
       uses: hashicorp/vault-action@v3
       with:
         url: ${{ inputs.VAULT_URL }}
@@ -53,7 +53,7 @@ runs:
 
     - name: Import environment variable secrets
       if: ${{ inputs.FRAMEWORK == 'hilla' }}
-      id: import-secrets
+      id: import-secrets-hilla
       uses: hashicorp/vault-action@v3
       with:
         url: ${{ inputs.VAULT_URL }}
@@ -66,13 +66,14 @@ runs:
     - name: Write secrets to .env
       shell: bash
       run: |
+        touch secrets.json
         if [ ${{ inputs.FRAMEWORK }} == 'nextjs' ]; then
           ENV_FILE=.env
+          echo '${{ toJson(steps.import-secrets-nextjs.outputs) }}' >> secrets.json
         elif [ ${{ inputs.FRAMEWORK }} == 'hilla' ]; then
           ENV_FILE='src/main/frontend/.env'
+          echo '${{ toJson(steps.import-secrets-hilla.outputs) }}' >> secrets.json
         fi
-        touch secrets.json
-        echo '${{ toJson(steps.import-secrets.outputs) }}' >> secrets.json
         echo "" >> $ENV_FILE
         jq -r 'to_entries[] | .key + "=" + .value' secrets.json >> $ENV_FILE
         rm secrets.json
