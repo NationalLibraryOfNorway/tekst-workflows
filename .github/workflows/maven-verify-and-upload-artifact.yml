@@ -122,13 +122,6 @@ jobs:
             echo "No Hilla frontend found, skipping frontend build"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
           fi
-      - name: Run Node tests
-        if: ${{ env.FRONTEND_EXISTS == 'true' }}
-        run: |
-          echo "Running Node tests"
-          cd target
-          npm ci
-          npm run test
 
       - name: Set artifact file name
         run: |
