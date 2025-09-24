@@ -91,6 +91,11 @@ jobs:
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
+      - name: Enable reuse of TestContainers
+        shell: bash
+        run: |
+          echo 'testcontainers.reuse.enable=true' >> ~/.testcontainers.properties
+          
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
         run: |
