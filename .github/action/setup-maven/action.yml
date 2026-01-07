@@ -1,0 +1,138 @@
+name: Setup Maven (stable)
+
+description: Resolve a stable Apache Maven version (if not provided), download with archive fallback, and install it into /opt.
+
+inputs:
+  maven_version:
+    description: Maven version to install. Supports full (e.g., 3.9.6), minor (e.g., 3.9), or major (e.g., 3). If empty, resolves the latest stable release.
+    required: false
+
+outputs:
+  maven_version:
+    description: Resolved Maven version.
+    value: ${{ steps.resolve.outputs.maven_version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve Maven version
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        WANT="${{ inputs.maven_version }}"
+
+        METADATA_URL="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml"
+
+        stable_only() {
+          # Stable versions are plain numeric dotted versions. Anything with a suffix like -rc/-alpha/-beta is excluded.
+          grep -E '^[0-9]+(\.[0-9]+)*$'
+        }
+
+        all_versions() {
+          # Print every <version> entry (one per line)
+          # shellcheck disable=SC2002
+          cat | sed -n 's:.*<version>\(.*\)</version>.*:\1:p'
+        }
+
+        resolve_latest_stable() {
+          local xml="$1"
+
+          # First try <release> / <latest> (fast path)
+          local v
+          v="$(printf '%s' "$xml" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n 1 | stable_only || true)"
+          if [ -z "$v" ]; then
+            v="$(printf '%s' "$xml" | sed -n 's:.*<latest>\(.*\)</latest>.*:\1:p' | head -n 1 | stable_only || true)"
+          fi
+          if [ -z "$v" ]; then
+            v="$(printf '%s' "$xml" | all_versions | stable_only | tail -n 1 || true)"
+          fi
+          printf '%s' "$v"
+        }
+
+        resolve_for_prefix() {
+          local xml="$1"
+          local prefix="$2"   # "3" or "3.9"
+          local regex
+
+          if [[ "$prefix" =~ ^[0-9]+$ ]]; then
+            regex="^${prefix}\\."
+          elif [[ "$prefix" =~ ^[0-9]+\\.[0-9]+$ ]]; then
+            regex="^${prefix}\\."
+          else
+            return 2
+          fi
+
+          # Pick the newest stable version matching the prefix.
+          # Note: maven-metadata.xml versions are already in chronological order, so tail -n 1 yields latest.
+          printf '%s' "$xml" | all_versions | stable_only | grep -E "$regex" | tail -n 1 || true
+        }
+
+        # Fetch metadata only when needed.
+        XML=""
+        if [ -z "$WANT" ] || [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\\.[0-9]+$ ]]; then
+          XML="$(curl -fsSL "$METADATA_URL")"
+        fi
+
+        MAVEN_VERSION=""
+
+        if [ -z "$WANT" ]; then
+          echo "MAVEN_VERSION not provided; resolving latest stable Maven release from metadata"
+          MAVEN_VERSION="$(resolve_latest_stable "$XML")"
+        elif [[ "$WANT" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then
+          MAVEN_VERSION="$WANT"
+        elif [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\\.[0-9]+$ ]]; then
+          echo "MAVEN_VERSION provided as major/minor ('$WANT'); resolving latest stable patch from metadata"
+          MAVEN_VERSION="$(resolve_for_prefix "$XML" "$WANT")"
+        else
+          echo "Unsupported MAVEN_VERSION format: '$WANT'. Use '', '3', '3.9', or '3.9.6'." >&2
+          exit 2
+        fi
+
+        if [ -z "$MAVEN_VERSION" ]; then
+          echo "Failed to resolve a stable MAVEN_VERSION" >&2
+          exit 1
+        fi
+
+        MAVEN_MAJOR="${MAVEN_VERSION%%.*}"
+        if ! [[ "$MAVEN_MAJOR" =~ ^[0-9]+$ ]]; then
+          echo "Failed to derive MAVEN_MAJOR from MAVEN_VERSION=$MAVEN_VERSION" >&2
+          exit 1
+        fi
+
+        echo "Resolved MAVEN_VERSION=$MAVEN_VERSION"
+        echo "Resolved MAVEN_MAJOR=$MAVEN_MAJOR"
+        echo "maven_version=$MAVEN_VERSION" >> "$GITHUB_OUTPUT"
+        echo "maven_major=$MAVEN_MAJOR" >> "$GITHUB_OUTPUT"
+        echo "MAVEN_VERSION=$MAVEN_VERSION" >> "$GITHUB_ENV"
+        echo "MAVEN_MAJOR=$MAVEN_MAJOR" >> "$GITHUB_ENV"
+
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update -y
+        sudo apt-get install -y curl ca-certificates
+
+    - name: Download Maven
+      uses: ./.github/action/download-with-fallback
+      with:
+        url: https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${{ steps.resolve.outputs.maven_version }}/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        fallback_url: https://archive.apache.org/dist/maven/maven-${{ steps.resolve.outputs.maven_major }}/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        output: apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+
+    - name: Install Maven
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MVN_VER="${{ steps.resolve.outputs.maven_version }}"
+        TAR="apache-maven-${MVN_VER}-bin.tar.gz"
+
+        tar xzf "$TAR"
+        sudo mv "apache-maven-${MVN_VER}" /opt/
+        sudo ln -sf "/opt/apache-maven-${MVN_VER}/bin/mvn" /usr/local/bin/mvn
+        echo "PATH=/opt/apache-maven-${MVN_VER}/bin:$PATH" >> "$GITHUB_ENV"
+        mvn -v
+
