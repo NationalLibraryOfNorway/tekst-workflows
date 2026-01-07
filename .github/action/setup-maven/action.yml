@@ -95,9 +95,18 @@ runs:
           exit 1
         fi
 
+        MAVEN_MAJOR="${MAVEN_VERSION%%.*}"
+        if ! [[ "$MAVEN_MAJOR" =~ ^[0-9]+$ ]]; then
+          echo "Failed to derive MAVEN_MAJOR from MAVEN_VERSION=$MAVEN_VERSION" >&2
+          exit 1
+        fi
+
         echo "Resolved MAVEN_VERSION=$MAVEN_VERSION"
+        echo "Resolved MAVEN_MAJOR=$MAVEN_MAJOR"
         echo "maven_version=$MAVEN_VERSION" >> "$GITHUB_OUTPUT"
+        echo "maven_major=$MAVEN_MAJOR" >> "$GITHUB_OUTPUT"
         echo "MAVEN_VERSION=$MAVEN_VERSION" >> "$GITHUB_ENV"
+        echo "MAVEN_MAJOR=$MAVEN_MAJOR" >> "$GITHUB_ENV"
 
     - name: Install prerequisites
       shell: bash
@@ -109,8 +118,8 @@ runs:
     - name: Download Maven
       uses: ./.github/action/download-with-fallback
       with:
-        url: https://downloads.apache.org/maven/maven-3/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
-        fallback_url: https://archive.apache.org/dist/maven/maven-3/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        url: https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${{ steps.resolve.outputs.maven_version }}/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        fallback_url: https://archive.apache.org/dist/maven/maven-${{ steps.resolve.outputs.maven_major }}/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
         output: apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
 
     - name: Install Maven
