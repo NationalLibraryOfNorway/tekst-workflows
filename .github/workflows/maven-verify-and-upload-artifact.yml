@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       MAVEN_VERSION:
-        required: true
+        required: false
         type: string
       USE_MAVEN_SETTINGS_FILE:
         required: true
@@ -58,16 +58,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Install Maven
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install wget -y
-          wget https://downloads.apache.org/maven/maven-3/${{ inputs.MAVEN_VERSION }}/binaries/apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
-          tar xzf apache-maven-${{ inputs.MAVEN_VERSION }}-bin.tar.gz
-          sudo mv apache-maven-${{ inputs.MAVEN_VERSION }} /opt/
-          sudo ln -s /opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin/mvn /usr/local/bin/mvn
-          echo "PATH=/opt/apache-maven-${{ inputs.MAVEN_VERSION }}/bin:$PATH" >> $GITHUB_ENV
-          mvn -v
+      - name: Setup Maven
+        uses: ./.github/action/setup-maven
+        with:
+          maven_version: ${{ inputs.MAVEN_VERSION }}
 
       - name: Check source code for existence of Hilla frontend
         shell: bash

@@ -1,0 +1,80 @@
+name: Setup Maven (stable)
+
+description: Resolve a stable Apache Maven version (if not provided), download with archive fallback, and install it into /opt.
+
+inputs:
+  maven_version:
+    description: Maven version to install. If empty, resolve the latest stable release.
+    required: false
+
+outputs:
+  maven_version:
+    description: Resolved Maven version.
+    value: ${{ steps.resolve.outputs.maven_version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve Maven version
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MAVEN_VERSION="${{ inputs.maven_version }}"
+        if [ -n "$MAVEN_VERSION" ]; then
+          echo "Using provided MAVEN_VERSION=$MAVEN_VERSION"
+        else
+          echo "MAVEN_VERSION not provided; resolving latest stable Maven release from metadata"
+          METADATA_URL="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml"
+          XML="$(curl -fsSL "$METADATA_URL")"
+
+          stable_only() {
+            grep -E '^[0-9]+(\.[0-9]+)*$'
+          }
+
+          MAVEN_VERSION="$(printf '%s' "$XML" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n 1 | stable_only || true)"
+          if [ -z "$MAVEN_VERSION" ]; then
+            MAVEN_VERSION="$(printf '%s' "$XML" | sed -n 's:.*<latest>\(.*\)</latest>.*:\1:p' | head -n 1 | stable_only || true)"
+          fi
+          if [ -z "$MAVEN_VERSION" ]; then
+            MAVEN_VERSION="$(printf '%s' "$XML" | sed -n 's:.*<version>\(.*\)</version>.*:\1:p' | stable_only | tail -n 1 || true)"
+          fi
+        fi
+
+        if [ -z "$MAVEN_VERSION" ]; then
+          echo "Failed to resolve a stable MAVEN_VERSION" >&2
+          exit 1
+        fi
+        
+        echo "maven_version=$MAVEN_VERSION" >> "$GITHUB_OUTPUT"
+        echo "MAVEN_VERSION=$MAVEN_VERSION" >> "$GITHUB_ENV"
+
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update -y
+        sudo apt-get install -y curl ca-certificates
+
+    - name: Download Maven
+      uses: ./.github/action/download-with-fallback
+      with:
+        url: https://downloads.apache.org/maven/maven-3/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        fallback_url: https://archive.apache.org/dist/maven/maven-3/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        output: apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+
+    - name: Install Maven
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MVN_VER="${{ steps.resolve.outputs.maven_version }}"
+        TAR="apache-maven-${MVN_VER}-bin.tar.gz"
+
+        tar xzf "$TAR"
+        sudo mv "apache-maven-${MVN_VER}" /opt/
+        sudo ln -sf "/opt/apache-maven-${MVN_VER}/bin/mvn" /usr/local/bin/mvn
+        echo "PATH=/opt/apache-maven-${MVN_VER}/bin:$PATH" >> "$GITHUB_ENV"
+        mvn -v
+
