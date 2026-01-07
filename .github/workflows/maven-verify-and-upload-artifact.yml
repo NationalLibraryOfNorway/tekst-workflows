@@ -26,13 +26,13 @@ on:
       VAULT_SECRET_ID:
         required: true
       S3_NB_HOST:
-        required: true
+        required: false
       S3_NB_ACCESS_KEY:
-        required: true
+        required: false
       S3_NB_SECRET_KEY:
-        required: true
+        required: false
       S3_NB_CACHE_BUCKET:
-        required: true
+        required: false
 
 jobs:
   build-and-test:

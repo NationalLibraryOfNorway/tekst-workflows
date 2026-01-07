@@ -8,16 +8,16 @@ inputs:
     required: false
   s3_host:
     description: S3 endpoint for cache
-    required: true
+    required: false
   s3_access_key:
     description: S3 access key for cache
-    required: true
+    required: false
   s3_secret_key:
     description: S3 secret key for cache
-    required: true
+    required: false
   s3_bucket:
     description: S3 bucket for cache
-    required: true
+    required: false
 
 outputs:
   maven_version:
@@ -143,6 +143,7 @@ runs:
         mvn -v
 
     - name: Cache
+      if: ${{ inputs.s3_host != '' && inputs.s3_access_key != '' && inputs.s3_secret_key != '' && inputs.s3_bucket != '' }}
       uses: tespkg/actions-cache@v1
       with:
         endpoint: ${{ inputs.s3_host }}
