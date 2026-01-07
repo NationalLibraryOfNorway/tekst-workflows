@@ -31,6 +31,14 @@ on:
         required: true
       VAULT_SECRET_ID:
         required: true
+      S3_NB_HOST:
+        required: true
+      S3_NB_ACCESS_KEY:
+        required: true
+      S3_NB_SECRET_KEY:
+        required: true
+      S3_NB_CACHE_BUCKET:
+        required: true
 
 env:
   MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=$GITHUB_REF_NAME -Dbuild.commit-id-short=$GITHUB_SHA -Dbuild.commit-id-long=$GITHUB_SHA -Dbuild.pipeline-id=$GITHUB_RUN_ID"
@@ -49,6 +57,10 @@ jobs:
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
       VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
       VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+      S3_NB_HOST: ${{ secrets.S3_NB_HOST }}
+      S3_NB_ACCESS_KEY: ${{ secrets.S3_NB_ACCESS_KEY }}
+      S3_NB_SECRET_KEY: ${{ secrets.S3_NB_SECRET_KEY }}
+      S3_NB_CACHE_BUCKET: ${{ secrets.S3_NB_CACHE_BUCKET }}
 
   build-and-publish-docker-image:
     needs: build-and-test

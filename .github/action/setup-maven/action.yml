@@ -6,6 +6,18 @@ inputs:
   maven_version:
     description: Maven version to install. Supports full (e.g., 3.9.6), minor (e.g., 3.9), or major (e.g., 3). If empty, resolves the latest stable release.
     required: false
+  s3_host:
+    description: S3 endpoint for cache
+    required: true
+  s3_access_key:
+    description: S3 access key for cache
+    required: true
+  s3_secret_key:
+    description: S3 secret key for cache
+    required: true
+  s3_bucket:
+    description: S3 bucket for cache
+    required: true
 
 outputs:
   maven_version:
@@ -57,9 +69,9 @@ runs:
           local regex
 
           if [[ "$prefix" =~ ^[0-9]+$ ]]; then
-            regex="^${prefix}\\."
-          elif [[ "$prefix" =~ ^[0-9]+\\.[0-9]+$ ]]; then
-            regex="^${prefix}\\."
+            regex="^${prefix}\."
+          elif [[ "$prefix" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            regex="^${prefix}\."
           else
             return 2
           fi
@@ -71,7 +83,7 @@ runs:
 
         # Fetch metadata only when needed.
         XML=""
-        if [ -z "$WANT" ] || [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\\.[0-9]+$ ]]; then
+        if [ -z "$WANT" ] || [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\.[0-9]+$ ]]; then
           XML="$(curl -fsSL "$METADATA_URL")"
         fi
 
@@ -80,9 +92,9 @@ runs:
         if [ -z "$WANT" ]; then
           echo "MAVEN_VERSION not provided; resolving latest stable Maven release from metadata"
           MAVEN_VERSION="$(resolve_latest_stable "$XML")"
-        elif [[ "$WANT" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then
+        elif [[ "$WANT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           MAVEN_VERSION="$WANT"
-        elif [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\\.[0-9]+$ ]]; then
+        elif [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\.[0-9]+$ ]]; then
           echo "MAVEN_VERSION provided as major/minor ('$WANT'); resolving latest stable patch from metadata"
           MAVEN_VERSION="$(resolve_for_prefix "$XML" "$WANT")"
         else
@@ -113,14 +125,7 @@ runs:
       run: |
         set -euo pipefail
         sudo apt-get update -y
-        sudo apt-get install -y curl ca-certificates
-
-    - name: Download Maven
-      uses: ./.github/action/download-with-fallback
-      with:
-        url: https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${{ steps.resolve.outputs.maven_version }}/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
-        fallback_url: https://archive.apache.org/dist/maven/maven-${{ steps.resolve.outputs.maven_major }}/${{ steps.resolve.outputs.maven_version }}/binaries/apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
-        output: apache-maven-${{ steps.resolve.outputs.maven_version }}-bin.tar.gz
+        sudo apt-get install -y wget
 
     - name: Install Maven
       shell: bash
@@ -128,11 +133,28 @@ runs:
         set -euo pipefail
 
         MVN_VER="${{ steps.resolve.outputs.maven_version }}"
-        TAR="apache-maven-${MVN_VER}-bin.tar.gz"
+        MVN_MAJOR="${{ steps.resolve.outputs.maven_major }}"
 
-        tar xzf "$TAR"
+        wget "https://downloads.apache.org/maven/maven-${MVN_MAJOR}/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
+        tar xzf "apache-maven-${MVN_VER}-bin.tar.gz"
         sudo mv "apache-maven-${MVN_VER}" /opt/
         sudo ln -sf "/opt/apache-maven-${MVN_VER}/bin/mvn" /usr/local/bin/mvn
         echo "PATH=/opt/apache-maven-${MVN_VER}/bin:$PATH" >> "$GITHUB_ENV"
         mvn -v
 
+    - name: Cache
+      uses: tespkg/actions-cache@v1
+      with:
+        endpoint: ${{ inputs.s3_host }}
+        accessKey: ${{ inputs.s3_access_key }}
+        secretKey: ${{ inputs.s3_secret_key }}
+        bucket: ${{ inputs.s3_bucket }}
+        use-fallback: true
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ inputs.maven-version }}-${{ github.ref_name }}-${{ hashFiles('**/pom.xml') }}-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('pom.xml', '**/pom.xml') }}-
+          ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-
+          ${{ runner.os }}-maven-${{ inputs.maven_version }}-
+          ${{ runner.os }}-maven-

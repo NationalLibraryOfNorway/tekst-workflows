@@ -25,6 +25,14 @@ on:
         required: true
       VAULT_SECRET_ID:
         required: true
+      S3_NB_HOST:
+        required: true
+      S3_NB_ACCESS_KEY:
+        required: true
+      S3_NB_SECRET_KEY:
+        required: true
+      S3_NB_CACHE_BUCKET:
+        required: true
 
 jobs:
   build-and-test:
@@ -51,17 +59,14 @@ jobs:
           java-version: ${{ inputs.JDK_VERSION  }}
           distribution: 'temurin'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Setup Maven
-        uses: ./.github/action/setup-maven
+      - name: Setup Maven and Cache
+        uses: NationalLibraryOfNorway/tekst-workflows/.github/action/setup-maven@main
         with:
           maven_version: ${{ inputs.MAVEN_VERSION }}
+          s3_host: ${{ secrets.S3_NB_HOST }}
+          s3_access_key: ${{ secrets.S3_NB_ACCESS_KEY }}
+          s3_secret_key: ${{ secrets.S3_NB_SECRET_KEY }}
+          s3_bucket: ${{ secrets.S3_NB_CACHE_BUCKET }}
 
       - name: Check source code for existence of Hilla frontend
         shell: bash
@@ -130,9 +135,3 @@ jobs:
           name: build-artifact
           path: build_output.tar.gz
 
-      - name: Cache .m2/repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
