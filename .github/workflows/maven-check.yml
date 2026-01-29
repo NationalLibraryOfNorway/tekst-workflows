@@ -56,7 +56,7 @@ jobs:
           s3_secret_key: ${{ secrets.S3_NB_SECRET_KEY }}
           s3_bucket: ${{ secrets.S3_NB_CACHE_BUCKET }}
 
-      - name: Import http proxy secrets from Vault
+      - name: Import http proxy and secrets from Vault
         id: import-secrets
         uses: hashicorp/vault-action@v3
         with:
@@ -65,12 +65,14 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *
+            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *;
+            ${{ secrets.VAULT_SECRET_PATH }}/nvd *
             
-      - name: Enable reuse of TestContainers
+      - name: Enable reuse of TestContainers and set NVD_REPO
         shell: bash
         run: |
           echo 'testcontainers.reuse.enable=true' >> ~/.testcontainers.properties
+          echo "NVD_REPO=${{ steps.import-secrets.outputs.NVD_REPO }}" 
 
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
