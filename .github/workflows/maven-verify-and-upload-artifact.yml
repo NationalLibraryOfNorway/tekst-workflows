@@ -39,7 +39,7 @@ jobs:
     name: Build and Test
     runs-on: [self-hosted-linux]
     steps:
-      - name: Import http proxy secrets from Vault
+      - name: Import http proxy and nvd secrets from Vault
         id: import-secrets
         uses: hashicorp/vault-action@v3
         with:
@@ -48,7 +48,8 @@ jobs:
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *
+            ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *;
+            ${{ secrets.VAULT_SECRET_PATH }}/nvd *
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -90,10 +91,11 @@ jobs:
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
 
-      - name: Enable reuse of TestContainers
+      - name: Enable reuse of TestContainers and set NVD_REPO
         shell: bash
         run: |
           echo 'testcontainers.reuse.enable=true' >> ~/.testcontainers.properties
+          echo "NVD_REPO=${{ steps.import-secrets.outputs.NVD_REPO }}" >> $GITHUB_ENV
           
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
