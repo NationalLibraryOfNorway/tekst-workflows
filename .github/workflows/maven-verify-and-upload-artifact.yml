@@ -60,6 +60,13 @@ jobs:
             ${{ secrets.VAULT_SECRET_PATH }}/nvd *;
             ${{ secrets.VAULT_SECRET_PATH }}/artifactory *
 
+      - name: Install Git LFS
+        if: ${{ inputs.USE_GIT_LFS }}
+        run: |
+          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+          sudo apt-get install git-lfs
+          git lfs install
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
