@@ -113,7 +113,7 @@ jobs:
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
             echo "Building with Hilla frontend using production profile"
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify -Pproduction
-          else if [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
+          elif [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
             sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
             sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
@@ -129,7 +129,7 @@ jobs:
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
             echo "Building with Hilla frontend using production profile"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify -Pproduction
-          else if [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
+          elif [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
             sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
             sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
