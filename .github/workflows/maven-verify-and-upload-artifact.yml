@@ -19,6 +19,9 @@ on:
       UPLOAD_TO_ARTIFACTORY:
         required: false
         type: boolean
+      USE_GIT_LFS:
+        required: false
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -59,6 +62,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: ${{ inputs.USE_GIT_LFS }}
 
       - name: Set up JDK ${{ inputs.JDK_VERSION }}
         uses: actions/setup-java@v4
