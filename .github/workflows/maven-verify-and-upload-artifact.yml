@@ -16,6 +16,9 @@ on:
         description: Benyttes kun til å bygge .env-filer til eventuell frontend
         required: false
         type: string
+      UPLOAD_TO_ARTIFACTORY:
+        required: false
+        type: boolean
     secrets:
       VAULT_URL:
         required: true
@@ -38,6 +41,8 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: [self-hosted-linux]
+    env:
+      MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=${{ github.ref_name }} -Dbuild.commit-id-short=${{ github.sha }} -Dbuild.commit-id-long=${{ github.sha }} -Dbuild.pipeline-id=${{ github.run_id }}"
     steps:
       - name: Import http proxy and nvd secrets from Vault
         id: import-secrets
@@ -49,7 +54,8 @@ jobs:
           secretId: ${{ secrets.VAULT_SECRET_ID }}
           secrets: |
             ${{ secrets.VAULT_SECRET_PATH }}/proxy1 *;
-            ${{ secrets.VAULT_SECRET_PATH }}/nvd *
+            ${{ secrets.VAULT_SECRET_PATH }}/nvd * :
+            ${{ secrets.VAULT_SECRET_PATH }}/artifactory *
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,8 +113,12 @@ jobs:
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
             echo "Building with Hilla frontend using production profile"
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify -Pproduction
-          else
-            echo "No Hilla frontend found, skipping frontend build"
+          else if [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
+            sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
+            sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          else 
+            echo "No Artifactory upload or Hilla frontend found, skipping frontend build"
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
           fi
 
@@ -119,21 +129,34 @@ jobs:
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
             echo "Building with Hilla frontend using production profile"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify -Pproduction
-          else
-            echo "No Hilla frontend found, skipping frontend build"
+          else if [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
+            sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
+            sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
+            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+          else 
+            echo "No Artifactory upload or Hilla frontend found, skipping frontend build"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
           fi
 
       - name: Set artifact file name
+        if: ${{ inputs.UPLOAD_TO_ARTIFACTORY != 'true' }}
         run: |
           echo "ARTIFACT_FILE_NAME=$(ls target/ | grep -o ".*.jar" | head -1)" >> $GITHUB_ENV
 
       - name: Compress build output
+        if: ${{ inputs.UPLOAD_TO_ARTIFACTORY != 'true' }}
         run: tar czvf build_output.tar.gz target/${{ env.ARTIFACT_FILE_NAME }}
 
       - name: Upload artifact
+        if: ${{ inputs.UPLOAD_TO_ARTIFACTORY != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: build_output.tar.gz
+
+      - name: Upload to artifactory
+        if: ${{ inputs.UPLOAD_TO_ARTIFACTORY == 'true' && startsWith(github.ref,'refs/tags/') }}
+        run: |
+          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} versions:set -DgenerateBackupPoms=false -DnewVersion=${{ github.ref_name }}
+          mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} deploy
 
