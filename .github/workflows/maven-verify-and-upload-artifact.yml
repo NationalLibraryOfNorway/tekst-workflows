@@ -64,7 +64,7 @@ jobs:
         if: ${{ inputs.USE_GIT_LFS }}
         run: |
           curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-          sudo apt-get install git-lfs
+          sudo apt-get install -y git-lfs
           git lfs install
 
       - name: Checkout repository
@@ -142,9 +142,8 @@ jobs:
             echo "Building with Hilla frontend using production profile"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify -Pproduction
           elif [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
-            sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
-            sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
-            mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
+            echo "Uploading to Artifactory requires proxy settings, setting Artifactory credentials in settings.xml"
+            exit 1
           else 
             echo "No Artifactory upload or Hilla frontend found, skipping frontend build"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
