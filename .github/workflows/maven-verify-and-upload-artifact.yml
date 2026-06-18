@@ -22,6 +22,10 @@ on:
       USE_GIT_LFS:
         required: false
         type: boolean
+      INSTALL_UV:
+        required: false
+        type: boolean
+        default: false
     secrets:
       VAULT_URL:
         required: true
@@ -77,6 +81,12 @@ jobs:
         with:
           java-version: ${{ inputs.JDK_VERSION  }}
           distribution: 'temurin'
+
+      - name: Install uv
+        # Needed by projects that bundle Python deps via uv (e.g. nifi-tekst-bundle).
+        # See: https://github.com/NationalLibraryOfNorway/nifi-tekst-bundle/pull/19
+        if: ${{ inputs.INSTALL_UV }}
+        uses: astral-sh/setup-uv@v6
 
       - name: Setup Maven and Cache
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/setup-maven@main
