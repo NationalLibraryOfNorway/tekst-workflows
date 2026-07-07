@@ -9,6 +9,10 @@ on:
       MAVEN_VERSION:
         required: false
         type: string
+      NODE_VERSION:
+        required: false
+        type: string
+        default: ''
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
@@ -39,6 +43,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.NODE_VERSION }}
+        if: ${{ inputs.NODE_VERSION != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.NODE_VERSION }}
 
       - name: Set up JDK ${{ inputs.JDK_VERSION }}
         uses: actions/setup-java@v4
