@@ -22,6 +22,10 @@ on:
       USE_GIT_LFS:
         required: false
         type: boolean
+      NODE_VERSION:
+        required: false
+        type: string
+        default: ''
     secrets:
       VAULT_URL:
         required: true
@@ -72,6 +76,12 @@ jobs:
         with:
           lfs: ${{ inputs.USE_GIT_LFS }}
 
+      - name: Set up Node.js ${{ inputs.NODE_VERSION }}
+        if: ${{ inputs.NODE_VERSION != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.NODE_VERSION }}
+
       - name: Set up JDK ${{ inputs.JDK_VERSION }}
         uses: actions/setup-java@v4
         with:
@@ -87,14 +97,14 @@ jobs:
           s3_secret_key: ${{ secrets.S3_NB_SECRET_KEY }}
           s3_bucket: ${{ secrets.S3_NB_CACHE_BUCKET }}
 
-      - name: Check source code for existence of Hilla frontend
+      - name: Check source code for existence of frontend
         shell: bash
         run: |
           if [ -d "src/main/frontend" ]; then
-            echo "Hilla frontend found."
+            echo "Frontend found."
             echo "FRONTEND_EXISTS=true" >> $GITHUB_ENV
           else
-            echo "No Hilla frontend found."
+            echo "No frontend found."
             echo "FRONTEND_EXISTS=false" >> $GITHUB_ENV
           fi
 
@@ -123,14 +133,14 @@ jobs:
           sed -i "s/http_proxy_host/${{ steps.import-secrets.outputs.HTTP_PROXY_URL }}/g" .mvn/settings.xml
           sed -i "s/http_proxy_port/${{ steps.import-secrets.outputs.PROXY_PORT }}/g" .mvn/settings.xml
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
-            echo "Building with Hilla frontend using production profile"
+            echo "Building with frontend using production profile"
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify -Pproduction
           elif [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
             sed -i "s/artifactory_user/${{ steps.import-secrets.outputs.ARTIFACTORY_USER }}/g" .mvn/settings.xml
             sed -i "s/artifactory_password/${{ steps.import-secrets.outputs.ARTIFACTORY_PASSWORD }}/g" .mvn/settings.xml
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
           else 
-            echo "No Artifactory upload or Hilla frontend found, skipping frontend build"
+            echo "No Artifactory upload or frontend found, skipping frontend build"
             mvn -e -s .mvn/settings.xml ${{ env.MAVEN_INFO }} verify
           fi
 
@@ -139,13 +149,13 @@ jobs:
         run: |
           echo "MAVEN_PROXY_SETTINGS=-Dhttp.proxyHost=${{ steps.import-secrets.outputs.HTTP_PROXY_URL }} -Dhttp.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }} -Dhttps.proxyHost=${{ steps.import-secrets.outputs.HTTPS_PROXY_URL }} -Dhttps.proxyPort=${{ steps.import-secrets.outputs.PROXY_PORT }}" >> $GITHUB_ENV
           if [ "${{ env.FRONTEND_EXISTS }}" == "true" ]; then
-            echo "Building with Hilla frontend using production profile"
+            echo "Building with frontend using production profile"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify -Pproduction
           elif [ "${{ inputs.UPLOAD_TO_ARTIFACTORY }}" == "true" ]; then
             echo "Uploading to Artifactory requires proxy settings, setting Artifactory credentials in settings.xml"
             exit 1
           else 
-            echo "No Artifactory upload or Hilla frontend found, skipping frontend build"
+            echo "No Artifactory upload or frontend found, skipping frontend build"
             mvn -e ${{ env.MAVEN_INFO }} ${{ env.MAVEN_PROXY_SETTINGS }} verify
           fi
 
