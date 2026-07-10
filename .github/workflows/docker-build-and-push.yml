@@ -36,7 +36,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver: docker
+          driver: docker-container
 
       - name: Import harbor secrets from Vault
         id: import-secrets
@@ -104,11 +104,15 @@ jobs:
         run: ls -la
 
       - name: Build image
-        uses: docker/build-push-action@v5
+        uses: Wandalen/wretry.action@v3
         with:
-          push: true
-          context: .
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+          action: docker/build-push-action@v7
+          attempt_limit: 3
+          attempt_delay: 15000
+          with: |
+            push: true
+            context: .
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+            build-args: |
+              ENVIRONMENT=${{ inputs.ENVIRONMENT }}
