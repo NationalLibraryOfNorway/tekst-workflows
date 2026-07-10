@@ -36,7 +36,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver: docker
+          driver: docker-container
 
       - name: Import harbor secrets from Vault
         id: import-secrets
@@ -103,8 +103,47 @@ jobs:
       - name: Sanity LS
         run: ls -la
 
-      - name: Build image
-        uses: docker/build-push-action@v5
+      # Harbor intermittently drops the blob upload session mid-push ("blob upload
+      # unknown to registry"), unrelated to what's being built. Retry natively by
+      # chaining the same action with continue-on-error + outcome checks, instead
+      # of pulling in a third-party retry-wrapper action.
+      - name: Build and push image (attempt 1)
+        id: build-1
+        continue-on-error: true
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+
+      - name: Wait before retry (attempt 2)
+        if: steps.build-1.outcome == 'failure'
+        run: sleep 15
+
+      - name: Build and push image (attempt 2)
+        id: build-2
+        if: steps.build-1.outcome == 'failure'
+        continue-on-error: true
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+
+      - name: Wait before retry (attempt 3)
+        if: steps.build-1.outcome == 'failure' && steps.build-2.outcome == 'failure'
+        run: sleep 15
+
+      - name: Build and push image (attempt 3)
+        id: build-3
+        if: steps.build-1.outcome == 'failure' && steps.build-2.outcome == 'failure'
+        uses: docker/build-push-action@v7
         with:
           push: true
           context: .
