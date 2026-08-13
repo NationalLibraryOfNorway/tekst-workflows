@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Import http proxy and nvd secrets from Vault
         id: import-secrets
-        uses: hashicorp/vault-action@v3
+        uses: hashicorp/vault-action@v4
         with:
           url: ${{ secrets.VAULT_URL }}
           method: approle
