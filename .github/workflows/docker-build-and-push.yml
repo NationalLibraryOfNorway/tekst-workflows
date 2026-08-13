@@ -47,7 +47,7 @@ jobs:
             network=host
             env.http_proxy=${{ env.DOCKER_HTTP_PROXY }}
             env.https_proxy=${{ env.DOCKER_HTTPS_PROXY }}
-            env.no_proxy="${{ env.DOCKER_NO_PROXY }}"
+            "env.no_proxy=${{ env.DOCKER_NO_PROXY }}"
 
       - name: Import harbor secrets from Vault
         id: import-secrets
