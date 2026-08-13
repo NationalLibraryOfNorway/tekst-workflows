@@ -33,10 +33,21 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Read proxy config from Docker daemon
+        run: |
+          echo "DOCKER_HTTP_PROXY=$(docker info --format '{{ .HTTPProxy }}')" >> "$GITHUB_ENV"
+          echo "DOCKER_HTTPS_PROXY=$(docker info --format '{{ .HTTPSProxy }}')" >> "$GITHUB_ENV"
+          echo "DOCKER_NO_PROXY=$(docker info --format '{{ .NoProxy }}')" >> "$GITHUB_ENV"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
+          driver-opts: |
+            network=host
+            env.http_proxy=${{ env.DOCKER_HTTP_PROXY }}
+            env.https_proxy=${{ env.DOCKER_HTTPS_PROXY }}
+            env.no_proxy=${{ env.DOCKER_NO_PROXY }}
 
       - name: Import harbor secrets from Vault
         id: import-secrets
