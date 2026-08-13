@@ -22,6 +22,10 @@ on:
       USE_HARBOR:
         required: true
         type: boolean
+      NODE_VERSION:
+        required: false
+        type: string
+        default: ''
     secrets:
       VAULT_URL:
         required: true
@@ -50,6 +54,7 @@ jobs:
       MAVEN_VERSION: ${{ inputs.MAVEN_VERSION }}
       USE_MAVEN_SETTINGS_FILE: ${{ inputs.USE_MAVEN_SETTINGS_FILE }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      NODE_VERSION: ${{ inputs.NODE_VERSION }}
     secrets:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
