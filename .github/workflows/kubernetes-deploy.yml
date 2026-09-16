@@ -59,9 +59,9 @@ jobs:
             ${{ secrets.VAULT_SECRET_PATH }}/dockerhub *
 
       - name: Setup Kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
         with:
-          version: 'v1.26.5'
+          version: 'v1.37.1'
 
       - name: Set REPOSITORY_NAME
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/set-repo-name@main
