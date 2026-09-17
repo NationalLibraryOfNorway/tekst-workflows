@@ -42,7 +42,7 @@ jobs:
       MAVEN_INFO: "--batch-mode -Dmaven.repo.local=.m2/repository -Dbuild.tag=${{ github.ref_name }} -Dbuild.commit-id-short=${{ github.sha }} -Dbuild.commit-id-long=${{ github.sha }} -Dbuild.pipeline-id=${{ github.run_id }}"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js ${{ inputs.NODE_VERSION }}
         if: ${{ inputs.NODE_VERSION != '' }}
