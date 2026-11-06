@@ -35,68 +35,31 @@ runs:
 
         WANT="${{ inputs.maven_version }}"
 
-        METADATA_URL="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml"
-
         stable_only() {
           # Stable versions are plain numeric dotted versions. Anything with a suffix like -rc/-alpha/-beta is excluded.
-          grep -E '^[0-9]+(\.[0-9]+)*$'
+          grep -E '^[0-9]+(\.[0-9]+)*$' || true
         }
 
         all_versions() {
-          # Print every <version> entry (one per line)
-          # shellcheck disable=SC2002
-          cat | sed -n 's:.*<version>\(.*\)</version>.*:\1:p'
+          # Read the Apache download directory listings instead of maven-metadata.xml on Maven Central,
+          # which rate limits (HTTP 429) our shared runner IP. The listings only contain the current
+          # patch of each line, which is exactly what we install from below.
+          for major in 3 4; do
+            curl -fsSL --retry 3 "https://downloads.apache.org/maven/maven-${major}/" \
+              | sed -n 's:.*href="\([0-9][^"/]*\)/".*:\1:p'
+          done | stable_only | sort -V
         }
-
-        resolve_latest_stable() {
-          local xml="$1"
-
-          # First try <release> / <latest> (fast path)
-          local v
-          v="$(printf '%s' "$xml" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n 1 | stable_only || true)"
-          if [ -z "$v" ]; then
-            v="$(printf '%s' "$xml" | sed -n 's:.*<latest>\(.*\)</latest>.*:\1:p' | head -n 1 | stable_only || true)"
-          fi
-          if [ -z "$v" ]; then
-            v="$(printf '%s' "$xml" | all_versions | stable_only | tail -n 1 || true)"
-          fi
-          printf '%s' "$v"
-        }
-
-        resolve_for_prefix() {
-          local xml="$1"
-          local prefix="$2"   # "3" or "3.9"
-          local regex
-
-          if [[ "$prefix" =~ ^[0-9]+$ ]]; then
-            regex="^${prefix}\."
-          elif [[ "$prefix" =~ ^[0-9]+\.[0-9]+$ ]]; then
-            regex="^${prefix}\."
-          else
-            return 2
-          fi
-
-          # Pick the newest stable version matching the prefix.
-          # Note: maven-metadata.xml versions are already in chronological order, so tail -n 1 yields latest.
-          printf '%s' "$xml" | all_versions | stable_only | grep -E "$regex" | tail -n 1 || true
-        }
-
-        # Fetch metadata only when needed.
-        XML=""
-        if [ -z "$WANT" ] || [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\.[0-9]+$ ]]; then
-          XML="$(curl -fsSL "$METADATA_URL")"
-        fi
 
         MAVEN_VERSION=""
 
         if [ -z "$WANT" ]; then
-          echo "MAVEN_VERSION not provided; resolving latest stable Maven release from metadata"
-          MAVEN_VERSION="$(resolve_latest_stable "$XML")"
+          echo "MAVEN_VERSION not provided; resolving latest stable Maven release from downloads.apache.org"
+          MAVEN_VERSION="$(all_versions | tail -n 1)"
         elif [[ "$WANT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           MAVEN_VERSION="$WANT"
         elif [[ "$WANT" =~ ^[0-9]+$ ]] || [[ "$WANT" =~ ^[0-9]+\.[0-9]+$ ]]; then
-          echo "MAVEN_VERSION provided as major/minor ('$WANT'); resolving latest stable patch from metadata"
-          MAVEN_VERSION="$(resolve_for_prefix "$XML" "$WANT")"
+          echo "MAVEN_VERSION provided as major/minor ('$WANT'); resolving latest stable patch from downloads.apache.org"
+          MAVEN_VERSION="$(all_versions | grep -E "^${WANT//./\\.}\." | tail -n 1 || true)"
         else
           echo "Unsupported MAVEN_VERSION format: '$WANT'. Use '', '3', '3.9', or '3.9.6'." >&2
           exit 2
@@ -135,7 +98,9 @@ runs:
         MVN_VER="${{ steps.resolve.outputs.maven_version }}"
         MVN_MAJOR="${{ steps.resolve.outputs.maven_major }}"
 
-        wget "https://downloads.apache.org/maven/maven-${MVN_MAJOR}/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
+        # downloads.apache.org only keeps the current patch of each line; older pinned versions live in the archive.
+        wget "https://downloads.apache.org/maven/maven-${MVN_MAJOR}/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz" \
+          || wget "https://archive.apache.org/dist/maven/maven-${MVN_MAJOR}/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
         tar xzf "apache-maven-${MVN_VER}-bin.tar.gz"
         sudo mv "apache-maven-${MVN_VER}" /opt/
         sudo ln -sf "/opt/apache-maven-${MVN_VER}/bin/mvn" /usr/local/bin/mvn
@@ -153,7 +118,7 @@ runs:
         use-fallback: true
         path: |
           ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ inputs.maven-version }}-${{ github.ref_name }}-${{ hashFiles('**/pom.xml') }}-${{ github.run_id }}
+        key: ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('**/pom.xml') }}-${{ github.run_id }}
         restore-keys: |
           ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('pom.xml', '**/pom.xml') }}-
           ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-
