@@ -43,6 +43,8 @@ on:
         required: false
       S3_NB_CACHE_BUCKET:
         required: false
+      MAVEN_MIRROR_URL:
+        required: false
 
 
 jobs:
@@ -64,6 +66,7 @@ jobs:
       S3_NB_ACCESS_KEY: ${{ secrets.S3_NB_ACCESS_KEY }}
       S3_NB_SECRET_KEY: ${{ secrets.S3_NB_SECRET_KEY }}
       S3_NB_CACHE_BUCKET: ${{ secrets.S3_NB_CACHE_BUCKET }}
+      MAVEN_MIRROR_URL: ${{ secrets.MAVEN_MIRROR_URL }}
 
   build-and-publish-docker-image:
     needs: build-and-test

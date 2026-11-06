@@ -18,6 +18,9 @@ inputs:
   s3_bucket:
     description: S3 bucket for cache
     required: false
+  maven_mirror_url:
+    description: Maven repository that mirrors Maven Central (e.g. an Artifactory virtual repo). If empty, Maven Central is used directly.
+    required: false
 
 outputs:
   maven_version:
@@ -106,6 +109,27 @@ runs:
         sudo ln -sf "/opt/apache-maven-${MVN_VER}/bin/mvn" /usr/local/bin/mvn
         echo "PATH=/opt/apache-maven-${MVN_VER}/bin:$PATH" >> "$GITHUB_ENV"
         mvn -v
+
+    - name: Configure Maven Central mirror
+      if: ${{ inputs.maven_mirror_url != '' }}
+      shell: bash
+      env:
+        MIRROR_URL: ${{ inputs.maven_mirror_url }}
+      run: |
+        set -euo pipefail
+        # Global settings are merged with the project's -s .mvn/settings.xml, so repos keep their own proxies.
+        sudo tee "/opt/apache-maven-${{ steps.resolve.outputs.maven_version }}/conf/settings.xml" > /dev/null <<EOF
+        <settings>
+          <mirrors>
+            <mirror>
+              <id>nb-maven-central-mirror</id>
+              <mirrorOf>central</mirrorOf>
+              <url>${MIRROR_URL}</url>
+            </mirror>
+          </mirrors>
+        </settings>
+        EOF
+        echo "Maven Central is mirrored through the configured maven_mirror_url"
 
     - name: Cache
       if: ${{ inputs.s3_host != '' && inputs.s3_access_key != '' && inputs.s3_secret_key != '' && inputs.s3_bucket != '' }}
