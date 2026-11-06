@@ -47,6 +47,8 @@ on:
         required: false
       S3_NB_CACHE_BUCKET:
         required: false
+      MAVEN_MIRROR_URL:
+        required: false
 
 jobs:
   build-and-test:
@@ -106,6 +108,7 @@ jobs:
           s3_access_key: ${{ secrets.S3_NB_ACCESS_KEY }}
           s3_secret_key: ${{ secrets.S3_NB_SECRET_KEY }}
           s3_bucket: ${{ secrets.S3_NB_CACHE_BUCKET }}
+          maven_mirror_url: ${{ secrets.MAVEN_MIRROR_URL }}
 
       - name: Check source code for existence of frontend
         shell: bash
