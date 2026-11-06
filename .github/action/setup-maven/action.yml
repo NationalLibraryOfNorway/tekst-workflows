@@ -118,9 +118,9 @@ runs:
         use-fallback: true
         path: |
           ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('**/pom.xml') }}-${{ github.run_id }}
+        # No run_id: an exact key hit skips the save, so a new entry is only stored when a pom changes.
+        key: ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
-          ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-${{ hashFiles('pom.xml', '**/pom.xml') }}-
           ${{ runner.os }}-maven-${{ inputs.maven_version }}-${{ github.ref_name }}-
           ${{ runner.os }}-maven-${{ inputs.maven_version }}-
           ${{ runner.os }}-maven-
