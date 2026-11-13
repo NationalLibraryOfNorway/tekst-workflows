@@ -48,6 +48,14 @@ jobs:
     env:
       MAVEN_INFO: "--batch-mode -Dbuild.tag=${{ github.ref_name }} -Dbuild.commit-id-short=${{ github.sha }} -Dbuild.commit-id-long=${{ github.sha }} -Dbuild.pipeline-id=${{ github.run_id }}"
     steps:
+      - name: Install apt packages
+        if: ${{ inputs.APT_PACKAGES != '' }}
+        env:
+          APT_PACKAGES: ${{ inputs.APT_PACKAGES }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends $APT_PACKAGES
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -62,14 +70,6 @@ jobs:
         with:
           java-version: ${{ inputs.JDK_VERSION  }}
           distribution: 'temurin'
-
-      - name: Install apt packages
-        if: ${{ inputs.APT_PACKAGES != '' }}
-        env:
-          APT_PACKAGES: ${{ inputs.APT_PACKAGES }}
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends $APT_PACKAGES
 
       - name: Setup Maven and Cache
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/setup-maven@main
