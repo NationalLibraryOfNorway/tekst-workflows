@@ -16,6 +16,11 @@ on:
       USE_MAVEN_SETTINGS_FILE:
         required: true
         type: string
+      APT_PACKAGES:
+        description: Space-separated apt packages to install before the build, e.g. tools the tests call
+        required: false
+        type: string
+        default: ''
     secrets:
       VAULT_URL:
         required: true
@@ -57,6 +62,14 @@ jobs:
         with:
           java-version: ${{ inputs.JDK_VERSION  }}
           distribution: 'temurin'
+
+      - name: Install apt packages
+        if: ${{ inputs.APT_PACKAGES != '' }}
+        env:
+          APT_PACKAGES: ${{ inputs.APT_PACKAGES }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends $APT_PACKAGES
 
       - name: Setup Maven and Cache
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/setup-maven@main

@@ -30,6 +30,11 @@ on:
         required: false
         type: boolean
         default: false
+      APT_PACKAGES:
+        description: Space-separated apt packages to install before the build, e.g. tools the tests call
+        required: false
+        type: string
+        default: ''
       DEPLOY_ENVIRONMENT:
         description: GitHub environment for tag builds (uploads), e.g. stage or prod. Empty means none
         required: false
@@ -105,6 +110,14 @@ jobs:
         # See: https://github.com/NationalLibraryOfNorway/nifi-tekst-bundle/pull/19
         if: ${{ inputs.INSTALL_UV }}
         uses: astral-sh/setup-uv@v6
+
+      - name: Install apt packages
+        if: ${{ inputs.APT_PACKAGES != '' }}
+        env:
+          APT_PACKAGES: ${{ inputs.APT_PACKAGES }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends $APT_PACKAGES
 
       - name: Setup Maven and Cache
         uses: NationalLibraryOfNorway/tekst-workflows/.github/action/setup-maven@main
