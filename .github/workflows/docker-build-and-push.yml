@@ -33,6 +33,11 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      # The proxy goes to the builder (driver-opts, to pull base images) and to the
+      # build (build-args, for RUN steps such as apt-get). http_proxy, https_proxy
+      # and no_proxy are Docker's predefined build args: they are kept out of the
+      # image history and the build cache. no_proxy is quoted because both inputs
+      # are also split on commas.
       - name: Read proxy config from Docker daemon
         run: |
           echo "DOCKER_HTTP_PROXY=$(docker info --format '{{ .HTTPProxy }}')" >> "$GITHUB_ENV"
@@ -129,6 +134,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+            http_proxy=${{ env.DOCKER_HTTP_PROXY }}
+            https_proxy=${{ env.DOCKER_HTTPS_PROXY }}
+            "no_proxy=${{ env.DOCKER_NO_PROXY }}"
 
       - name: Wait before retry (attempt 2)
         if: steps.build-1.outcome == 'failure'
@@ -146,6 +154,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+            http_proxy=${{ env.DOCKER_HTTP_PROXY }}
+            https_proxy=${{ env.DOCKER_HTTPS_PROXY }}
+            "no_proxy=${{ env.DOCKER_NO_PROXY }}"
 
       - name: Wait before retry (attempt 3)
         if: steps.build-1.outcome == 'failure' && steps.build-2.outcome == 'failure'
@@ -162,3 +173,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             ENVIRONMENT=${{ inputs.ENVIRONMENT }}
+            http_proxy=${{ env.DOCKER_HTTP_PROXY }}
+            https_proxy=${{ env.DOCKER_HTTPS_PROXY }}
+            "no_proxy=${{ env.DOCKER_NO_PROXY }}"
