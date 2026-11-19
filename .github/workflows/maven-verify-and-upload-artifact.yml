@@ -87,7 +87,6 @@ jobs:
         run: |
           sudo -E apt-get update -y
           sudo -E apt-get install -y --no-install-recommends git-lfs
-          git lfs install
 
       - name: Install apt packages
         if: ${{ inputs.APT_PACKAGES != '' }}
