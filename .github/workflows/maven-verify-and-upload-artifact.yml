@@ -83,9 +83,10 @@ jobs:
 
       - name: Install Git LFS
         if: ${{ inputs.USE_GIT_LFS }}
+        timeout-minutes: 5
         run: |
-          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-          sudo apt-get install -y git-lfs
+          sudo -E apt-get update -y
+          sudo -E apt-get install -y --no-install-recommends git-lfs
           git lfs install
 
       - name: Install apt packages
