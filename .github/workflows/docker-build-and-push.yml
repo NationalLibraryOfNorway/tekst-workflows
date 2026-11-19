@@ -98,6 +98,17 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
+      # Branch builds get the same version as the Maven build in maven-verify-and-upload-artifact.yml:
+      # <branch>-<short commit> (develop -> develop-87ff35c). Tag builds skip this and keep the
+      # semver tag (v3.1.2 -> 3.1.2), so a release never gets a commit suffix.
+      - name: Set branch image version
+        if: ${{ startsWith(github.ref, 'refs/heads/') }}
+        shell: bash
+        run: |
+          echo "BRANCH_IMAGE_VERSION=${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      # The highest-priority tag becomes image_version, which the deploy uses: semver (900) on tag
+      # builds, the branch version (700) on branch builds. The plain branch tag (e.g. develop) is still pushed.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -105,6 +116,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=${{ env.BRANCH_IMAGE_VERSION }},priority=700,enable=${{ startsWith(github.ref, 'refs/heads/') }}
             type=ref,event=branch
             type=ref,event=pr
 
