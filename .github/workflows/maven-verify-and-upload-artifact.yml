@@ -156,7 +156,21 @@ jobs:
         run: |
           echo 'testcontainers.reuse.enable=true' >> ~/.testcontainers.properties
           echo "NVD_REPO=${{ steps.import-secrets.outputs.NVD_REPO }}" >> $GITHUB_ENV
-          
+
+      # Sets the version for POMs with <version>${revision}</version>; a POM without ${revision} ignores it.
+      # Tag builds use the tag without "v" (v3.1.2 -> 3.1.2). Branch builds use the branch and short
+      # commit (develop -> develop-87ff35c), so a stage build can be traced to its commit.
+      - name: Set Maven revision from tag or branch
+        if: ${{ startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/') }}
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" == "tag" ]; then
+            REVISION="${GITHUB_REF_NAME#v}"
+          else
+            REVISION="${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}"
+          fi
+          echo "MAVEN_INFO=${MAVEN_INFO} -Drevision=${REVISION}" >> $GITHUB_ENV
+
       - name: Build and Test with proxy maven settings.xml file
         if: ${{ inputs.USE_MAVEN_SETTINGS_FILE == 'true' }}
         run: |
